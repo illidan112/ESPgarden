@@ -10,7 +10,7 @@
 #include "tController.h"
 #include "tExecutor.h"
 
-#define STACK_SIZE 1024
+#define STACK_SIZE 2048
 #define HIGH_PRIORITY 1
 
 #define BLINK_GPIO GPIO_NUM_32

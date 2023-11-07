@@ -1,35 +1,59 @@
+#include "esp_log.h"
+#include <string.h>
+#include <sys/time.h>
+#include <time.h>
 
 #include "realtime.h"
 
-// struct timeval tv = { 1698099699, 0 };
-// settimeofday(&tv, NULL);
+#define COMPILATION_TIME __TIME__
 
-// while(1){
+const static char* TAG = "RTC";
 
-// // time_t now;
-// // char strftime_buf[64];
-// // struct tm timeinfo;
+esp_err_t timeInit() {
 
-// // time(&now);
-// // // Set timezone to China Standard Time
-// // setenv("TZ", "UTC+2", 1);
-// // tzset();
+    const char* compilationDateTime = __DATE__ " " __TIME__;
+    // char strftime_buf[64];
+    struct timeval tv;
+    struct tm tm_info;
+    memset(&tm_info, 0, sizeof(struct tm));
 
-// // localtime_r(&now, &timeinfo);
-// // strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+    // Set timezone
+    setenv("TZ", "UTC+2", 1);
+    tzset();
 
-// time_t current_time;
-// struct tm *time_info;
-// int hours, minutes;
+    if (strptime(compilationDateTime, "%b %e %Y %H:%M:%S", &tm_info) == NULL) {
+        ESP_LOGE(TAG, "Time string conversion error");
+        return ESP_FAIL;
+    }
 
-// time(&current_time);
-// time_info = localtime(&current_time);
+    // translate tm_info in Unix epoch
+    tv.tv_sec = mktime(&tm_info);
+    tv.tv_usec = 0;
+    // ESP RTC time updates
+    settimeofday(&tv, NULL);
 
-// hours = time_info->tm_hour;
-// minutes = time_info->tm_min;
-// ESP_LOGI(TAG, "Current time: %02d:%02d", hours, minutes);
-// // test();
-// vTaskDelay(pdMS_TO_TICKS(1000));
-// }
+    return ESP_OK;
+}
 
-void stringTime() { printf("Скомпилировано %s в %s\n", __DATE__, __TIME__); }
+uint8_t hoursNow() {
+
+    time_t timeNow;
+    struct tm timeinfo;
+
+    time(&timeNow);
+    localtime_r(&timeNow, &timeinfo);
+
+    return timeinfo.tm_hour;
+}
+
+void stringDateTime() {
+
+    time_t now;
+    char strftime_buf[64];
+    struct tm timeinfo;
+
+    time(&now);
+    localtime_r(&now, &timeinfo);
+    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+    ESP_LOGI(TAG, "The current date/time is: %s", strftime_buf);
+}

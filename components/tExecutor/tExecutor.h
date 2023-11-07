@@ -8,3 +8,4 @@ typedef enum {
 }executorEvent;
 
 void ExecutorTask(void* pvParameters);
+void SendExecutorEvent(const executorEvent event);

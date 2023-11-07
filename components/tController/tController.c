@@ -1,15 +1,19 @@
 #include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 #include "freertos/queue.h"
+#include "freertos/task.h"
 #include "freertos/timers.h"
 
 // #include "soilHumidity.h"
 #include "realtime.h"
+#include "settings.h"
+#include "tExecutor.h"
 
 #include "tController.h"
 
+extern SettingsData settings;
+
 TaskHandle_t ControllerHandle;
-static QueueHandle_t  event_queue = NULL;
+static QueueHandle_t event_queue = NULL;
 static TimerHandle_t scan_timer = NULL;
 static const uint8_t eventQueueLen = 3;
 
@@ -21,10 +25,25 @@ void scanTmrCallback() {
 }
 
 static void HandleEvent(const controllerEvent event) {
-    
-    switch (event){
-        case Scan:
-        stringTime();
+
+    switch (event) {
+    case Scan:
+        /*_____LIGHT______*/
+        // printf("hoursNow(): %d\n", hoursNow());
+        // printf("address settings: %d\n", (int)&settings);
+        if (hoursNow() >= settings.lightTime.turnOnHour) {
+            // printf("turnOnHour: %d\n", settings.lightTime.turnOnHour);
+            // printf("durationHours: %d\n", settings.lightTime.durationHours);
+            if (hoursNow() >= (settings.lightTime.turnOnHour + settings.lightTime.durationHours)){
+                //turn OFF lighting
+                SendExecutorEvent(OffLight);
+            }else{
+                //turn ON lighting
+                SendExecutorEvent(OnLight);
+            }
+        }
+
+        stringDateTime();
         break;
     }
 }
@@ -32,16 +51,21 @@ static void HandleEvent(const controllerEvent event) {
 void ControllerTask(void* pvParameters) {
     (void)pvParameters;
 
-    scan_timer = xTimerCreate("Scan Measures Tmr", pdMS_TO_TICKS(2000), pdTRUE, 0, scanTmrCallback);
+    timeInit();
+
+    /*TODO: Initialization of all setting
+    should be in another place*/
+    updateSwitchTime(20, 0, 1);
+
+    scan_timer = xTimerCreate("Scan Measures Tmr", pdMS_TO_TICKS(3000), pdTRUE, 0, scanTmrCallback);
+    xTimerStart(scan_timer, 0);
 
     event_queue = xQueueCreate(eventQueueLen, sizeof(controllerEvent));
 
     while (1) {
         controllerEvent event;
-        if(xQueueReceive(event_queue, &event, portMAX_DELAY)){
+        if (xQueueReceive(event_queue, &event, portMAX_DELAY)) {
             HandleEvent(event);
         }
-        // Task code goes here
-        vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for 1000 milliseconds
     }
 }
