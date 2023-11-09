@@ -1,3 +1,3 @@
 idf_component_register(SRCS "tController.c"
                     INCLUDE_DIRS "."
-                    REQUIRES realtime soilHumidity settings tExecutor "freertos")
+                    REQUIRES realtime soilHumidity settings bme280 tExecutor "freertos")
