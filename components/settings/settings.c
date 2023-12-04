@@ -7,10 +7,12 @@ void initializeSettings() {
     settings.lightTime.turnOnHour = 0;
     settings.lightTime.turnOnMinute = 0;
     settings.lightTime.durationHours = 0;
+    settings.airTemp.MaxTemp = 29;
+    settings.airTemp.MinTemp = 20;
 }
 
 // Function to update the switch time in the settings data
-void updateSwitchTime( uint8_t hour, uint8_t minute, uint8_t duration) {
+void updateSwitchTime(uint8_t hour, uint8_t minute, uint8_t duration) {
     // printf("hour: %d\n", hour);
     settings.lightTime.turnOnHour = hour;
     settings.lightTime.turnOnMinute = minute;

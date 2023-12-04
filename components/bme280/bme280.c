@@ -159,7 +159,6 @@ static void bme280_dev_config(void)
   bme280_store_comp_params();
 }
 
-bme280_get_data
 void bme280_custom_init(uint8_t i2c_port,
                         uint8_t sda_pin,uint8_t scl_pin,
                         bool enable_pullup,uint32_t clk_freq)
