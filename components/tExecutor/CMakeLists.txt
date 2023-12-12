@@ -1,3 +1,3 @@
-idf_component_register(SRCS "tExecutor.c"
-                    INCLUDE_DIRS "."
-                    REQUIRES lighting fan "freertos")
+# idf_component_register(SRCS "tExecutor.c"
+#                     INCLUDE_DIRS "."
+#                     REQUIRES lighting fan "freertos")

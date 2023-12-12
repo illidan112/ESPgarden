@@ -6,6 +6,9 @@
 #include <esp_err.h>
 
 void stringDateTime();
+
+char* getStrDateTime();
+
 esp_err_t timeInit();
 
 /**

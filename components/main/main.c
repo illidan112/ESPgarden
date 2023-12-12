@@ -8,7 +8,8 @@
 // #include <sys/time.h>
 
 #include "tController.h"
-#include "tExecutor.h"
+// #include "tExecutor.h"
+#include "settings.h"
 
 #define STACK_SIZE 2048
 #define HIGH_PRIORITY 1
@@ -18,8 +19,10 @@
 // const static char* TAG = "MAIN";
 
 void app_main(void) { 
+    initializeSettings();
+
     xTaskCreate(ControllerTask, "Controller Task", STACK_SIZE, NULL, HIGH_PRIORITY, NULL); 
-    xTaskCreate(ExecutorTask, "Executor Task", STACK_SIZE, NULL, HIGH_PRIORITY, NULL);
+    // xTaskCreate(ExecutorTask, "Executor Task", STACK_SIZE, NULL, HIGH_PRIORITY, NULL);
 }
 
 // ESP_LOGI(TAG, "Example configured to blink GPIO LED!");

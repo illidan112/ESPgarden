@@ -6,8 +6,10 @@
 #include "realtime.h"
 
 #define COMPILATION_TIME __TIME__
+#define DATA_TIME_SIZE 24
 
 const static char* TAG = "RTC";
+char dataTimeStr[DATA_TIME_SIZE];
 
 esp_err_t timeInit() {
 
@@ -56,4 +58,18 @@ void stringDateTime() {
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
     ESP_LOGI(TAG, "The current date/time is: %s", strftime_buf);
+}
+
+char* getStrDateTime() {
+
+    time_t now;
+    struct tm timeinfo;
+
+    time(&now);
+    localtime_r(&now, &timeinfo);
+    strftime(dataTimeStr, 9, "%x", &timeinfo); // getting date in format DD/MM/YY
+    dataTimeStr[8] = ' ';                      // erase '\0' symbol
+    strftime(dataTimeStr + 9, 9, "%X", &timeinfo); // getting time in the same array in format HH:MM:SS
+
+    return dataTimeStr;
 }

@@ -7,7 +7,7 @@ void initializeSettings() {
     settings.lightTime.turnOnHour = 0;
     settings.lightTime.turnOnMinute = 0;
     settings.lightTime.durationHours = 0;
-    settings.airTemp.MaxTemp = 29;
+    settings.airTemp.MaxTemp = 25;
     settings.airTemp.MinTemp = 20;
 }
 

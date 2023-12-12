@@ -1,16 +1,19 @@
+#include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
-#include "esp_log.h"
 
 // #include "soilHumidity.h"
 #include "airSensor.h"
 #include "realtime.h"
 #include "settings.h"
-#include "tExecutor.h"
-
+// #include "tExecutor.h"
 #include "tController.h"
+
+#include "fan.h"
+#include "lighting.h"
+// #include "tExecutor.h"
 
 const static char* TAG = "CTRL";
 
@@ -32,25 +35,40 @@ static void HandleEvent(const controllerEvent event) {
 
     switch (event) {
     case Scan:
-        /*_____LIGHT______*/
-        // printf("hoursNow(): %d\n", hoursNow());
-        // printf("address settings: %d\n", (int)&settings);
+        //SCANNING INPUT PARAM
+
+
+        /*_____TIME_CHECK______*/
         if (hoursNow() >= settings.lightTime.turnOnHour) {
-            // printf("turnOnHour: %d\n", settings.lightTime.turnOnHour);
-            // printf("durationHours: %d\n", settings.lightTime.durationHours);
             if (hoursNow() >= (settings.lightTime.turnOnHour + settings.lightTime.durationHours)) {
                 // turn OFF lighting
-                SendExecutorEvent(OffLight);
+                lightingTurnOFF();
+                // SendExecutorEvent(OffLight);
             } else {
                 // turn ON lighting
-                SendExecutorEvent(OnLight);
+                lightingTurnON();
             }
         }
 
+        /*______FAN______*/
+        if (getTemp() >= settings.airTemp.MaxTemp) {
+            fanTurnON(BOX_VENT);
+            // SendExecutorEvent(OnFan);
+            ESP_LOGI(TAG, "Temp higher than %d", settings.airTemp.MaxTemp);
+        } else {
+            // SendExecutorEvent(OffFan);
+            fanTurnOFF(BOX_VENT);
+        }
+        
 
-        stringDateTime();
+        /*LOGS_OF_SYSTEM*/
+        char* dataTimeStr;
+        dataTimeStr = getStrDateTime();
+
+        ESP_LOGI(TAG, "%s: Temp %d°С, Humd %d%%", dataTimeStr, getTemp(), getHumidity());
         break;
     }
+
 }
 
 void ControllerTask(void* pvParameters) {
@@ -58,10 +76,12 @@ void ControllerTask(void* pvParameters) {
 
     timeInit();
     airSensorInit();
+    lightingInit();
+    fanInit();
 
     /*TODO: Initialization of all setting
     should be in another place*/
-    updateSwitchTime(20, 0, 1);
+    updateSwitchTime(22, 0, 1);
 
     scan_timer = xTimerCreate("Scan Measures Tmr", pdMS_TO_TICKS(3000), pdTRUE, 0, scanTmrCallback);
     xTimerStart(scan_timer, 0);

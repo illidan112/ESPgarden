@@ -4,6 +4,8 @@
 typedef enum {
     OnLight = 0,
     OffLight,
+    OnFan,
+    OffFan,
 
 }executorEvent;
 
