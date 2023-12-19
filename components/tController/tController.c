@@ -34,44 +34,49 @@ void scanTmrCallback() {
 static void LightCheck(uint8_t currentHour) {
     static bool isLightON = false;
 
-    if (!isLightON) {
-        if (currentHour >= settings.lightTime.turnOnHour) {
-            if (currentHour >= (settings.lightTime.turnOnHour + settings.lightTime.durationHours)) {
-                lightingTurnOFF();
-            } else {
-                lightingTurnON();
-            }
+    if (currentHour >= settings.lightTime.turnOnHour && currentHour < settings.lightTime.turnOffHour) {
+        if (!isLightON) {
+            lightingTurnON();
+            isLightON = true;
         }
-        isLightON = true;
+    } else {
+        if (isLightON) {
+            lightingTurnOFF();
+            isLightON = false;
+        }
     }
 }
 
 static void LampFanCheck(uint8_t currentHour) {
-    static bool isLightON = false;
+    static bool isFanON = false;
 
-    if (!isLightON) {
-        if (currentHour >= settings.lightTime.turnOnHour) {
-            if (currentHour >= (settings.lightTime.turnOnHour + settings.lightTime.durationHours)) {
-                lightingTurnOFF();
-            } else {
-                lightingTurnON();
-            }
+    if (currentHour >= settings.lightTime.turnOnHour && currentHour < (settings.lightTime.turnOffHour + 1)) {
+        if (!isFanON) {
+            fanTurnON(LAMP_VENT);
+            isFanON = true;
         }
-        isLightON = true;
+    } else {
+        if (isFanON) {
+            fanTurnOFF(LAMP_VENT);
+            isFanON = false;
+        }
     }
 }
 
 static void BoxFanCheck(uint8_t currentTemp) {
     static bool isFanON = false;
-
-    if (!isFanON) {
-        if (currentTemp >= settings.airTemp.MaxTemp) {
+    
+    if (currentTemp >= settings.airTemp.MaxTemp) {
+        if (!isFanON) {
             fanTurnON(BOX_VENT);
             ESP_LOGI(TAG, "Temp higher than %d", settings.airTemp.MaxTemp);
-        } else {
-            fanTurnOFF(BOX_VENT);
+            isFanON = true;
         }
-        isFanON = true;
+    } else {
+        if (isFanON) {
+            fanTurnOFF(BOX_VENT);
+            isFanON = false;
+        }
     }
 }
 
@@ -101,7 +106,7 @@ void ControllerTask(void* pvParameters) {
 
     /*TODO: Initialization of all setting
     should be in another place*/
-    updateSwitchTime(22, 0, 1);
+    updateSwitchTime(22, 23);
 
     scan_timer = xTimerCreate("Scan Measures Tmr", pdMS_TO_TICKS(3000), pdTRUE, 0, scanTmrCallback);
     xTimerStart(scan_timer, 0);
