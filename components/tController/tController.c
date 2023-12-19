@@ -31,44 +31,64 @@ void scanTmrCallback() {
     SendControllerEvent(event);
 }
 
-static void HandleEvent(const controllerEvent event) {
+static void LightCheck(uint8_t currentHour) {
+    static bool isLightON = false;
 
-    switch (event) {
-    case Scan:
-        //SCANNING INPUT PARAM
-
-
-        /*_____TIME_CHECK______*/
-        if (hoursNow() >= settings.lightTime.turnOnHour) {
-            if (hoursNow() >= (settings.lightTime.turnOnHour + settings.lightTime.durationHours)) {
-                // turn OFF lighting
+    if (!isLightON) {
+        if (currentHour >= settings.lightTime.turnOnHour) {
+            if (currentHour >= (settings.lightTime.turnOnHour + settings.lightTime.durationHours)) {
                 lightingTurnOFF();
-                // SendExecutorEvent(OffLight);
             } else {
-                // turn ON lighting
                 lightingTurnON();
             }
         }
+        isLightON = true;
+    }
+}
 
-        /*______FAN______*/
-        if (getTemp() >= settings.airTemp.MaxTemp) {
+static void LampFanCheck(uint8_t currentHour) {
+    static bool isLightON = false;
+
+    if (!isLightON) {
+        if (currentHour >= settings.lightTime.turnOnHour) {
+            if (currentHour >= (settings.lightTime.turnOnHour + settings.lightTime.durationHours)) {
+                lightingTurnOFF();
+            } else {
+                lightingTurnON();
+            }
+        }
+        isLightON = true;
+    }
+}
+
+static void BoxFanCheck(uint8_t currentTemp) {
+    static bool isFanON = false;
+
+    if (!isFanON) {
+        if (currentTemp >= settings.airTemp.MaxTemp) {
             fanTurnON(BOX_VENT);
-            // SendExecutorEvent(OnFan);
             ESP_LOGI(TAG, "Temp higher than %d", settings.airTemp.MaxTemp);
         } else {
-            // SendExecutorEvent(OffFan);
             fanTurnOFF(BOX_VENT);
         }
-        
+        isFanON = true;
+    }
+}
 
-        /*LOGS_OF_SYSTEM*/
-        char* dataTimeStr;
-        dataTimeStr = getStrDateTime();
+static void HandleEvent(const controllerEvent event) {
+    switch (event) {
+    case Scan:
+        uint8_t currentHour = hoursNow();
+        uint8_t currentTemp = getTemp();
+        uint8_t currentHumidity = getHumidity();
 
-        ESP_LOGI(TAG, "%s: Temp %d°С, Humd %d%%", dataTimeStr, getTemp(), getHumidity());
+        LightCheck(currentHour);
+        BoxFanCheck(currentTemp);
+
+        char* dataTimeStr = getStrDateTime();
+        ESP_LOGI(TAG, "%s: Temp %d°C, Humd %d%%", dataTimeStr, currentTemp, currentHumidity);
         break;
     }
-
 }
 
 void ControllerTask(void* pvParameters) {

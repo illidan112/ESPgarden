@@ -1,3 +1,4 @@
+#include <stdint.h>
 #ifndef _FAN_H_
 #define _FAN_H_
 
