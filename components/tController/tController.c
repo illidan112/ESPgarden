@@ -12,6 +12,8 @@
 #include "tController.h"
 
 #include "fan.h"
+#include "wifi.h"
+#include "httpServer.h"
 #include "lighting.h"
 // #include "tExecutor.h"
 
@@ -47,21 +49,21 @@ static void LightCheck(uint8_t currentHour) {
     }
 }
 
-static void LampFanCheck(uint8_t currentHour) {
-    static bool isFanON = false;
+// static void LampFanCheck(uint8_t currentHour) {
+//     static bool isFanON = false;
 
-    if (currentHour >= settings.lightTime.turnOnHour && currentHour < (settings.lightTime.turnOffHour + 1)) {
-        if (!isFanON) {
-            fanTurnON(LAMP_VENT);
-            isFanON = true;
-        }
-    } else {
-        if (isFanON) {
-            fanTurnOFF(LAMP_VENT);
-            isFanON = false;
-        }
-    }
-}
+//     if (currentHour >= settings.lightTime.turnOnHour && currentHour < (settings.lightTime.turnOffHour + 1)) {
+//         if (!isFanON) {
+//             fanTurnON(LAMP_VENT);
+//             isFanON = true;
+//         }
+//     } else {
+//         if (isFanON) {
+//             fanTurnOFF(LAMP_VENT);
+//             isFanON = false;
+//         }
+//     }
+// }
 
 static void BoxFanCheck(uint8_t currentTemp) {
     static bool isFanON = false;
@@ -112,6 +114,10 @@ void ControllerTask(void* pvParameters) {
     xTimerStart(scan_timer, 0);
 
     event_queue = xQueueCreate(eventQueueLen, sizeof(controllerEvent));
+
+    ESP_ERROR_CHECK(wifi_init_sta());
+    ESP_ERROR_CHECK(http_server_start());
+
 
     while (1) {
         controllerEvent event;
