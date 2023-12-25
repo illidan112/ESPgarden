@@ -24,14 +24,35 @@ extern SettingsData settings;
 TaskHandle_t ControllerHandle;
 static QueueHandle_t event_queue = NULL;
 static TimerHandle_t scan_timer = NULL;
+static TimerHandle_t wifi_timer = NULL;
 static const uint8_t eventQueueLen = 3;
+
 
 void SendControllerEvent(const controllerEvent event) { xQueueSend(event_queue, &event, 0); }
 
 void scanTmrCallback() {
-    controllerEvent event = Scan;
+    controllerEvent event = SCAN;
     SendControllerEvent(event);
 }
+
+// void startOneShotTimer(void (*callbackFunction)(TimerHandle_t)) {
+
+//     // Создание таймера
+//     xOneShotTimer = xTimerCreate("Timer", pdMS_TO_TICKS(1000), pdFALSE, (void *) 0, (TimerCallbackFunction_t) callbackFunction);
+
+//     if(xOneShotTimer == NULL) {
+//         // Обработка ошибки создания таймера
+//     } else {
+//         // Запуск таймера. Не перезапускается после срабатывания
+//         if(xTimerStart(xOneShotTimer, 0) != pdPASS) {
+//             // Обработка ошибки запуска таймера
+//         }
+//     }
+// }
+
+// void stopOneShotTimer(){
+//     xTimerDelete(xOneShotTimer, 0);
+// }
 
 static void LightCheck(uint8_t currentHour) {
     static bool isLightON = false;
@@ -84,7 +105,7 @@ static void BoxFanCheck(uint8_t currentTemp) {
 
 static void HandleEvent(const controllerEvent event) {
     switch (event) {
-    case Scan:
+    case SCAN:
         uint8_t currentHour = hoursNow();
         uint8_t currentTemp = getTemp();
         uint8_t currentHumidity = getHumidity();
@@ -94,6 +115,13 @@ static void HandleEvent(const controllerEvent event) {
 
         char* dataTimeStr = getStrDateTime();
         ESP_LOGI(TAG, "%s: Temp %d°C, Humd %d%%", dataTimeStr, currentTemp, currentHumidity);
+        break;
+    
+
+    case WIFI_LOST:
+        //after expiring wifi_sta_reset() will be call
+        ESP_LOGI(TAG, "Event: WIFI_LOST");
+        xTimerStart(wifi_timer, 0);
         break;
     }
 }
@@ -111,11 +139,12 @@ void ControllerTask(void* pvParameters) {
     updateSwitchTime(22, 23);
 
     scan_timer = xTimerCreate("Scan Measures Tmr", pdMS_TO_TICKS(3000), pdTRUE, 0, scanTmrCallback);
+    wifi_timer = xTimerCreate("WI-FI connection delay", pdMS_TO_TICKS(10000), pdFALSE, (void *) 0, wifi_sta_reset );
     xTimerStart(scan_timer, 0);
 
     event_queue = xQueueCreate(eventQueueLen, sizeof(controllerEvent));
 
-    ESP_ERROR_CHECK(wifi_init_sta());
+    ESP_ERROR_CHECK(wifi_sta_init());
     ESP_ERROR_CHECK(http_server_start());
 
 

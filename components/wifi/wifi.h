@@ -3,7 +3,9 @@
 
 #include "esp_err.h"
 
-// Initialize the Wi-Fi in STA mode
-esp_err_t wifi_init_sta();
+// Initialize and start the Wi-Fi in STA mode
+esp_err_t wifi_sta_init();
+
+void wifi_sta_reset();
 
 #endif // WIFI_H

@@ -3,6 +3,7 @@
 */
 
 #include "wifi.h"
+#include "tController.h"
 
 #include <string.h>
 #include "freertos/FreeRTOS.h"
@@ -24,7 +25,7 @@
 */
 #define ESP_WIFI_SSID      "iPhone (Ilya)"
 #define ESP_WIFI_PASS      "Abobaaboba112"
-#define ESP_MAXIMUM_RETRY  10
+#define ESP_MAXIMUM_RETRY  5
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
@@ -38,6 +39,7 @@ static EventGroupHandle_t s_wifi_event_group;
 static const char *TAG = "WIFI";
 
 static int s_retry_num = 0;
+static esp_netif_t *sta_netif = NULL;
 
 static void event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
@@ -50,13 +52,16 @@ static void event_handler(void* arg, esp_event_base_t event_base,
             s_retry_num++;
             ESP_LOGI(TAG, "retry to connect to the AP");
         } else {
+            controllerEvent event = WIFI_LOST;
+            SendControllerEvent(event);
+
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
             ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
                   ESP_WIFI_SSID,  ESP_WIFI_PASS);
         }
         ESP_LOGI(TAG,"connect to the AP fail");
     } else if (event_base == IP_EVENT ){
-        printf("IP_EVENT \n");
+        printf("ID event: %d\n", (int)event_id);
         switch (event_id){
             case IP_EVENT_STA_GOT_IP:
             {
@@ -68,19 +73,19 @@ static void event_handler(void* arg, esp_event_base_t event_base,
                  ESP_WIFI_SSID,  ESP_WIFI_PASS);
                 break;
             }
-            default:{
-                printf("ID event: %d\n", (int)event_id);
-            }
+            // default:{
+            //     printf("ID event: %d\n", (int)event_id);
+            // }
         }
     }
 }
 
-esp_err_t wifi_init_sta(void)
+esp_err_t wifi_sta_init(void)
 {
     esp_err_t ret_value = ESP_OK;
     s_wifi_event_group = xEventGroupCreate();
 
-    esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
+    sta_netif = esp_netif_create_default_wifi_sta();
     assert(sta_netif);
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
@@ -89,6 +94,7 @@ esp_err_t wifi_init_sta(void)
 
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_LOST_IP, &event_handler, NULL));
 
     wifi_config_t wifi_config = {
         .sta = {
@@ -125,8 +131,25 @@ esp_err_t wifi_init_sta(void)
         ret_value = ESP_ERR_INVALID_STATE;
     }
 
+    return ret_value;
+}
+
+void wifi_sta_reset(){
+
+    ESP_LOGI(TAG, "Reboot WIFI now");
+
+    //deinit wifi_event_group
     ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler));
     ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler));
+    ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_LOST_IP, &event_handler));
     vEventGroupDelete(s_wifi_event_group);
-    return ret_value;
+    s_wifi_event_group = NULL;
+
+    //deinit sta_netif for esp_netif_create_default_wifi_sta()
+    esp_netif_destroy(sta_netif);
+
+    // ESP_ERROR_CHECK(esp_wifi_deinit());
+    ESP_ERROR_CHECK(esp_wifi_stop());
+    ESP_ERROR_CHECK(wifi_sta_init());
+
 }
