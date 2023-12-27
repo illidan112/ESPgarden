@@ -10,6 +10,18 @@ typedef enum {
 
 }controllerEvent;
 
+// typedef struct {
+//     controllerEvent eventType;
+//     union {
+//         struct {
+//             int settingData;
+//             // other variables
+//         } settData;
+//         // other structures
+//     } eventData;
+// } ControllerEventInfo;
+
+
 void ControllerTask(void* pvParameters);
 void SendControllerEvent(const controllerEvent event);
 

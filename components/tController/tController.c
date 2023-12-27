@@ -17,6 +17,8 @@
 #include "wifi.h"
 // #include "tExecutor.h"
 
+#define WI_FI_RECCONECT_MS 30000
+
 const static char* TAG = "CTRL";
 
 extern SettingsData settings;
@@ -56,8 +58,12 @@ void scanTmrCallback() {
 
 static void LightCheck(uint8_t currentHour) {
     static bool isLightON = false;
+    uint8_t onHour = 0;
+    uint8_t offHour = 0;
 
-    if (currentHour >= settings.lightTime.turnOnHour && currentHour < settings.lightTime.turnOffHour) {
+    getLightTime(&onHour, &offHour);
+
+    if (currentHour >= onHour && currentHour < offHour) {
         if (!isLightON) {
             lightingTurnON();
             isLightON = true;
@@ -88,11 +94,15 @@ static void LightCheck(uint8_t currentHour) {
 
 static void BoxFanCheck(uint8_t currentTemp) {
     static bool isFanON = false;
+    uint8_t maxT = 0;
+    uint8_t minT = 0;
 
-    if (currentTemp >= settings.airTemp.MaxTemp) {
+    getAirTemp(&maxT, &minT);
+
+    if (currentTemp >= maxT) {
         if (!isFanON) {
             fanTurnON(BOX_VENT);
-            ESP_LOGI(TAG, "Temp higher than %d", settings.airTemp.MaxTemp);
+            ESP_LOGI(TAG, "Temp higher than %d", maxT);
             isFanON = true;
         }
     } else {
@@ -133,6 +143,7 @@ static void HandleEvent(const controllerEvent event) {
 
         ESP_LOGI(TAG, "SERVER_RESTART Handled");
         break;
+
     }
 }
 
@@ -149,7 +160,7 @@ void ControllerTask(void* pvParameters) {
     updateSwitchTime(22, 23);
 
     scan_timer = xTimerCreate("Scan Measures Tmr", pdMS_TO_TICKS(5000), pdTRUE, 0, scanTmrCallback);
-    serv_rest = xTimerCreate("WI-FI connection delay", pdMS_TO_TICKS(10000), pdFALSE, (void*)0, ServerRestart);
+    serv_rest = xTimerCreate("WI-FI connection delay", pdMS_TO_TICKS(WI_FI_RECCONECT_MS), pdFALSE, (void*)0, ServerRestart);
     xTimerStart(scan_timer, 0);
 
     event_queue = xQueueCreate(eventQueueLen, sizeof(controllerEvent));

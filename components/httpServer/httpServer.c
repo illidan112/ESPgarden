@@ -18,6 +18,7 @@
 
 #include "airSensor.h"
 #include "realtime.h"
+#include "settings.h"
 // #include "../../managed_components/espressif__mdns/include/mdns.h"
 
 #if !CONFIG_IDF_TARGET_LINUX
@@ -97,7 +98,7 @@ static esp_err_t send_temp_humidity_page(httpd_req_t* req) {
 }
 
 static esp_err_t send_settings_page(httpd_req_t* req) {
-    char html_response[1024];
+    char html_response[1300];
 
     // Format the HTML response to include a form with a dropdown and a button
     int len = snprintf(
@@ -113,6 +114,7 @@ static esp_err_t send_settings_page(httpd_req_t* req) {
         "th {background-color: #333;}"
         ".nav-table {position: absolute; top: 0; left: 0; width: 20%%;}"
         ".nav-table td {padding: 4px; text-align: center;}"
+        "table {margin-left: auto; margin-right: auto; margin-top: 20px;}"
         "</style>"
         "</head>"
 
@@ -123,11 +125,23 @@ static esp_err_t send_settings_page(httpd_req_t* req) {
         "</table>"
         "<h2 style=\"text-align:center;\">Select Settings</h2>"
 
+        "<table>"
+        "<tr>"
+        "<th>Air temp</th>"
+        "<th>Light time</th>"
+        "</tr>"
+        "<tr>"
+        "<td>MAX temp: <input type=\"text\" id=\"maxTemp\" name=\"maxTemp\"></td>"
+        "<td>Light on: <input type=\"text\" id=\"lightOn\" name=\"lightOn\"></td>"
+        "</tr>"
+        "<tr>"
+        "<td>Min temp: <input type=\"text\" id=\"minTemp\" name=\"minTemp\"></td>"
+        "<td>Light off: <input type=\"text\" id=\"lightOff\" name=\"lightOff\"></td>"
+        "</tr>"
+        "</table>"
+
         "<form action=\"/update\" method=\"post\">"
-        "<label for=\"numberInput\">Enter Number:</label>"
-        "<input type=\"number\" id=\"numberInput\" name=\"numberInput\">"
-        "<br><br>"
-        "<input type=\"submit\" value=\"Update\">"
+        "<input type=\"submit\" value=\"UPDATE\">"
         "</form>"
         "</body>"
         "</html>");
@@ -147,11 +161,102 @@ esp_err_t http_404_error_handler(httpd_req_t* req, httpd_err_code_t err) {
     return ESP_FAIL;
 }
 
+// static esp_err_t handle_update_post(httpd_req_t* req) {
+//     char html_response[1024];
+//     char buf[100];
+//     int ret, received = 0;
+//     char number_value[32] = {0}; // Buffer to store the number value
+
+//     int content_len = req->content_len;
+
+//     while (received < content_len) {
+//         /* Read the data for the request */
+//         if ((ret = httpd_req_recv(req, buf + received, MIN(content_len - received, sizeof(buf) - received))) <= 0) {
+//             if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
+//                 continue;
+//             }
+//             return ESP_FAIL;
+//         }
+
+//         received += ret;
+//     }
+
+//     // Null terminate the buffer
+//     buf[received] = '\0';
+
+//     // Extract the number value from the buffer
+//     // The form data is now sent as 'numberInput=entered_number'
+//     char* start = strstr(buf, "numberInput=");
+//     if (start) {
+//         start += strlen("numberInput="); // Move start pointer to the value
+//         char* end = strstr(start, "&");  // Find the end of the value
+//         if (end == NULL) {
+//             end = buf + received; // If there's no other parameter, end is at the end of the data
+//         }
+//         int len = MIN(end - start, sizeof(number_value) - 1);
+//         strncpy(number_value, start, len);
+//         number_value[len] = '\0'; // Null terminate the copied value
+//     }
+
+//     ESP_LOGI(TAG, "Number entered: %s", number_value);
+
+//     // Format the HTML response
+//     int len = snprintf(
+//         html_response, sizeof(html_response),
+//         "<!DOCTYPE html>"
+//         "<html>"
+//         "<head>"
+//         "<title>GARDEN</title>"
+//         "<style>"
+//         "body { background-color: black; color: white; }"
+//         "form {text-align: center; margin-top: 20px;}"
+//         "th, td {border: 1px solid white; text-align: center; padding: 8px;}"
+//         "th {background-color: #333;}"
+//         ".nav-table {position: absolute; top: 0; left: 0; width: 20%%;}"
+//         ".nav-table td {padding: 4px; text-align: center;}"
+//         "</style>"
+//         "</head>"
+
+//         "<body>"
+//         "<table class=\"nav-table\">"
+//         "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\">Main Page</button></form></td></tr>"
+//         "<tr><td><form action=\"/settings\" method=\"get\"><button
+//         type=\"submit\">Settings</button></form></td></tr>"
+//         "</table>"
+//         "<h2 style=\"text-align:center;\">Updated succesfully</h2>"
+
+//         "</body>"
+//         "</html>");
+
+//     if (len < 0 || len >= sizeof(html_response)) {
+//         // Handle error: snprintf failed or buffer size was not enough
+//         return ESP_ERR_INVALID_SIZE;
+//     }
+
+//     // Send a response
+//     // Use the actual length of the response
+//     return httpd_resp_send(req, html_response, len);
+// }
+
+// Function to extract data from the buffer
+// void extract_data(const char* field_name, char* output, int output_size) {
+//     char* start = strstr(buf, field_name);
+//     if (start) {
+//         start += strlen(field_name);    // Move start pointer to the value
+//         char* end = strstr(start, "&"); // Find the end of the value
+//         if (end == NULL) {
+//             end = buf + received; // If there's no other parameter, end is at the end of the data
+//         }
+//         int len = MIN(end - start, output_size - 1);
+//         strncpy(output, start, len);
+//         output[len] = '\0'; // Null terminate the copied value
+//     }
+// }
+
 static esp_err_t handle_update_post(httpd_req_t* req) {
-    char html_response[1024];
-    char buf[100];
+    char buf[256];
     int ret, received = 0;
-    char number_value[32] = {0}; // Buffer to store the number value
+    char maxTemp[32] = {0}, minTemp[32] = {0}, lightOn[32] = {0}, lightOff[32] = {0};
 
     int content_len = req->content_len;
 
@@ -163,29 +268,37 @@ static esp_err_t handle_update_post(httpd_req_t* req) {
             }
             return ESP_FAIL;
         }
-
         received += ret;
     }
 
     // Null terminate the buffer
     buf[received] = '\0';
 
-    // Extract the number value from the buffer
-    // The form data is now sent as 'numberInput=entered_number'
-    char* start = strstr(buf, "numberInput=");
-    if (start) {
-        start += strlen("numberInput="); // Move start pointer to the value
-        char* end = strstr(start, "&");  // Find the end of the value
-        if (end == NULL) {
-            end = buf + received; // If there's no other parameter, end is at the end of the data
+    // Function to extract data from the buffer
+    void extract_data(const char* field_name, char* output, int output_size) {
+        char* start = strstr(buf, field_name);
+        if (start) {
+            start += strlen(field_name);    // Move start pointer to the value
+            char* end = strstr(start, "&"); // Find the end of the value
+            if (end == NULL) {
+                end = buf + received; // If there's no other parameter, end is at the end of the data
+            }
+            int len = MIN(end - start, output_size - 1);
+            strncpy(output, start, len);
+            output[len] = '\0'; // Null terminate the copied value
         }
-        int len = MIN(end - start, sizeof(number_value) - 1);
-        strncpy(number_value, start, len);
-        number_value[len] = '\0'; // Null terminate the copied value
     }
 
-    ESP_LOGI(TAG, "Number entered: %s", number_value);
+    // Extract values from all fields
+    extract_data("maxTemp=", maxTemp, sizeof(maxTemp));
+    extract_data("minTemp=", minTemp, sizeof(minTemp));
+    extract_data("lightOn=", lightOn, sizeof(lightOn));
+    extract_data("lightOff=", lightOff, sizeof(lightOff));
 
+    // Log the values (or handle them as needed)
+    ESP_LOGI(TAG, "Max Temp: %s, Min Temp: %s, Light On: %s, Light Off: %s", maxTemp, minTemp, lightOn, lightOff);
+
+    char html_response[1024];
     // Format the HTML response
     int len = snprintf(
         html_response, sizeof(html_response),
@@ -225,7 +338,7 @@ static esp_err_t handle_update_post(httpd_req_t* req) {
 
 static const httpd_uri_t main = {.uri = "/", .method = HTTP_GET, .handler = send_temp_humidity_page, .user_ctx = NULL};
 
-static const httpd_uri_t settings = {
+static const httpd_uri_t settings_uri = {
     .uri = "/settings", .method = HTTP_GET, .handler = send_settings_page, .user_ctx = NULL};
 
 static const httpd_uri_t update = {
@@ -248,7 +361,7 @@ static httpd_handle_t start_webserver(void) {
         // Set URI handlers
         ESP_LOGI(TAG, "Registering URI handlers");
         httpd_register_uri_handler(server, &main);
-        httpd_register_uri_handler(server, &settings);
+        httpd_register_uri_handler(server, &settings_uri);
         httpd_register_uri_handler(server, &update);
         httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
         return server;

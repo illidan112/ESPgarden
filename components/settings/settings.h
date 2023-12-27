@@ -30,12 +30,51 @@ extern SettingsData settings;
 void initializeSettings();
 
 /**
- * @brief update scheduled lighting control time.
+ * @brief Update the scheduled times for turning the light on and off.
+ * 
+ * This function updates the global settings for the lighting control system.
+ * It sets the hours when the light should be turned on and off.
+ * If a parameter is set to -1, the corresponding time will not be changed.
  *
- * @param hour hours of turn on light.
- * @param minute minutes of turn on light.
- * @param duration lighting time in hours.
+ * @param ONhour The hour to turn the light on. Range: 0-23, or -1 for no change.
+ * @param OFFhour The hour to turn the light off. Range: 0-23, or -1 for no change.
  */
-void updateSwitchTime(uint8_t ONhour, uint8_t OFFhour);
+void updateSwitchTime(int ONhour, int OFFhour);
+
+/**
+ * @brief Update the temperature thresholds for air control.
+ *
+ * @param max The maximum temperature threshold in Celsius. Range: valid temp range or -1 for no change.
+ * @param min The minimum temperature threshold in Celsius. Range: valid temp range or -1 for no change.
+ */
+void updateAirTemp(int max, int min);
+
+
+/**
+ * @brief Retrieve the current air temperature thresholds.
+ * 
+ * This function reads the global air temperature settings (maximum and minimum thresholds)
+ * and stores them in the provided pointer parameters. It ensures thread-safe access to these settings
+ * by using mutex locking.
+ *
+ * @param maxTemp Pointer to store the maximum temperature threshold.
+ * @param minTemp Pointer to store the minimum temperature threshold.
+ */
+void getAirTemp(uint8_t* maxTemp, uint8_t* minTemp);
+
+
+/**
+ * @brief Retrieve the current scheduled times for lighting control.
+ * 
+ * This function reads the global settings for the lighting control times (turn on and off hours)
+ * and stores them in the provided pointer parameters. It ensures thread-safe access to these settings
+ * by using mutex locking.
+ *
+ * @param turnOnHour Pointer to store the hour to turn the light on.
+ * @param turnOffHour Pointer to store the hour to turn the light off.
+ */
+void getLightTime(uint8_t* turnOnHour, uint8_t* turnOffHour);
+
+
 
 #endif
