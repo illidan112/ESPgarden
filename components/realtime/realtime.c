@@ -2,6 +2,8 @@
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 #include "realtime.h"
 
@@ -10,6 +12,7 @@
 
 const static char* TAG = "RTC";
 char dataTimeStr[DATA_TIME_SIZE];
+SemaphoreHandle_t timeMutex;
 
 esp_err_t timeInit() {
 
@@ -33,6 +36,8 @@ esp_err_t timeInit() {
     tv.tv_usec = 0;
     // ESP RTC time updates
     settimeofday(&tv, NULL);
+
+    timeMutex = xSemaphoreCreateMutex();
 
     return ESP_OK;
 }
@@ -61,15 +66,17 @@ void stringDateTime() {
 }
 
 char* getStrDateTime() {
-
     time_t now;
     struct tm timeinfo;
 
-    time(&now);
-    localtime_r(&now, &timeinfo);
-    strftime(dataTimeStr, 9, "%x", &timeinfo); // getting date in format DD/MM/YY
-    dataTimeStr[8] = ' ';                      // erase '\0' symbol
-    strftime(dataTimeStr + 9, 9, "%X", &timeinfo); // getting time in the same array in format HH:MM:SS
+    if (xSemaphoreTake(timeMutex, portMAX_DELAY)) {
+        time(&now);
+        localtime_r(&now, &timeinfo);
+        strftime(dataTimeStr, 9, "%x", &timeinfo);     // getting date in format DD/MM/YY
+        dataTimeStr[8] = ' ';                          // erase '\0' symbol
+        strftime(dataTimeStr + 9, 9, "%X", &timeinfo); // getting time in the same array in format HH:MM:SS
+        xSemaphoreGive(timeMutex);
+    }
 
     return dataTimeStr;
 }

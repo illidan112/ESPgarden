@@ -12,9 +12,9 @@
 #include "tController.h"
 
 #include "fan.h"
-#include "wifi.h"
 #include "httpServer.h"
 #include "lighting.h"
+#include "wifi.h"
 // #include "tExecutor.h"
 
 const static char* TAG = "CTRL";
@@ -24,9 +24,8 @@ extern SettingsData settings;
 TaskHandle_t ControllerHandle;
 static QueueHandle_t event_queue = NULL;
 static TimerHandle_t scan_timer = NULL;
-static TimerHandle_t wifi_timer = NULL;
+static TimerHandle_t serv_rest = NULL;
 static const uint8_t eventQueueLen = 3;
-
 
 void SendControllerEvent(const controllerEvent event) { xQueueSend(event_queue, &event, 0); }
 
@@ -38,7 +37,8 @@ void scanTmrCallback() {
 // void startOneShotTimer(void (*callbackFunction)(TimerHandle_t)) {
 
 //     // Создание таймера
-//     xOneShotTimer = xTimerCreate("Timer", pdMS_TO_TICKS(1000), pdFALSE, (void *) 0, (TimerCallbackFunction_t) callbackFunction);
+//     xOneShotTimer = xTimerCreate("Timer", pdMS_TO_TICKS(1000), pdFALSE, (void *) 0, (TimerCallbackFunction_t)
+//     callbackFunction);
 
 //     if(xOneShotTimer == NULL) {
 //         // Обработка ошибки создания таймера
@@ -88,7 +88,7 @@ static void LightCheck(uint8_t currentHour) {
 
 static void BoxFanCheck(uint8_t currentTemp) {
     static bool isFanON = false;
-    
+
     if (currentTemp >= settings.airTemp.MaxTemp) {
         if (!isFanON) {
             fanTurnON(BOX_VENT);
@@ -100,6 +100,13 @@ static void BoxFanCheck(uint8_t currentTemp) {
             fanTurnOFF(BOX_VENT);
             isFanON = false;
         }
+    }
+}
+
+static void ServerRestart() {
+    wifi_sta_reset();
+    if (!isHttpServerActive()) {
+        ESP_ERROR_CHECK(http_server_start());
     }
 }
 
@@ -116,12 +123,15 @@ static void HandleEvent(const controllerEvent event) {
         char* dataTimeStr = getStrDateTime();
         ESP_LOGI(TAG, "%s: Temp %d°C, Humd %d%%", dataTimeStr, currentTemp, currentHumidity);
         break;
-    
 
-    case WIFI_LOST:
-        //after expiring wifi_sta_reset() will be call
-        ESP_LOGI(TAG, "Event: WIFI_LOST");
-        xTimerStart(wifi_timer, 0);
+    case SERVER_RESTART:
+        // after expiring wifi_sta_reset() will be call
+        
+            if (xTimerIsTimerActive(serv_rest) == pdFALSE) {
+                xTimerStart(serv_rest, 0);
+            }
+
+        ESP_LOGI(TAG, "SERVER_RESTART Handled");
         break;
     }
 }
@@ -138,15 +148,25 @@ void ControllerTask(void* pvParameters) {
     should be in another place*/
     updateSwitchTime(22, 23);
 
-    scan_timer = xTimerCreate("Scan Measures Tmr", pdMS_TO_TICKS(3000), pdTRUE, 0, scanTmrCallback);
-    wifi_timer = xTimerCreate("WI-FI connection delay", pdMS_TO_TICKS(10000), pdFALSE, (void *) 0, wifi_sta_reset );
+    scan_timer = xTimerCreate("Scan Measures Tmr", pdMS_TO_TICKS(5000), pdTRUE, 0, scanTmrCallback);
+    serv_rest = xTimerCreate("WI-FI connection delay", pdMS_TO_TICKS(10000), pdFALSE, (void*)0, ServerRestart);
     xTimerStart(scan_timer, 0);
 
     event_queue = xQueueCreate(eventQueueLen, sizeof(controllerEvent));
 
-    ESP_ERROR_CHECK(wifi_sta_init());
-    ESP_ERROR_CHECK(http_server_start());
-
+    esp_err_t status = wifi_sta_init();
+    if (status == ESP_ERR_TIMEOUT) {
+        // controllerEvent event_rest = SERVER_RESTART;
+        // SendControllerEvent(event_rest);
+        ESP_LOGW(TAG, "WIFI_ERR_TIMEOUT");
+        if (xTimerIsTimerActive(serv_rest) == pdFALSE) {
+            xTimerStart(serv_rest, 0);
+        }
+    } else if (status == ESP_OK) {
+        ESP_ERROR_CHECK(http_server_start());
+    } else {
+        ESP_LOGE(TAG, "WIFI Init ERROR");
+    }
 
     while (1) {
         controllerEvent event;

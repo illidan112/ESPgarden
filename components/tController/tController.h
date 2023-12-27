@@ -6,7 +6,7 @@
 // Available events in priority order
 typedef enum {
     SCAN = 0,
-    WIFI_LOST,
+    SERVER_RESTART,
 
 }controllerEvent;
 
