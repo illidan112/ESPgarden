@@ -19,6 +19,7 @@
 #include "airSensor.h"
 #include "realtime.h"
 #include "settings.h"
+#include "wifi.h"
 // #include "../../managed_components/espressif__mdns/include/mdns.h"
 
 #if !CONFIG_IDF_TARGET_LINUX
@@ -98,7 +99,7 @@ static esp_err_t send_temp_humidity_page(httpd_req_t* req) {
 }
 
 static esp_err_t send_settings_page(httpd_req_t* req) {
-    char html_response[1300];
+    char html_response[1500];
 
     // Format the HTML response to include a form with a dropdown and a button
     int len = snprintf(
@@ -125,24 +126,18 @@ static esp_err_t send_settings_page(httpd_req_t* req) {
         "</table>"
         "<h2 style=\"text-align:center;\">Select Settings</h2>"
 
-        "<table>"
-        "<tr>"
-        "<th>Air temp</th>"
-        "<th>Light time</th>"
-        "</tr>"
-        "<tr>"
-        "<td>MAX temp: <input type=\"text\" id=\"maxTemp\" name=\"maxTemp\"></td>"
-        "<td>Light on: <input type=\"text\" id=\"lightOn\" name=\"lightOn\"></td>"
-        "</tr>"
-        "<tr>"
-        "<td>Min temp: <input type=\"text\" id=\"minTemp\" name=\"minTemp\"></td>"
-        "<td>Light off: <input type=\"text\" id=\"lightOff\" name=\"lightOff\"></td>"
-        "</tr>"
-        "</table>"
-
         "<form action=\"/update\" method=\"post\">"
-        "<input type=\"submit\" value=\"UPDATE\">"
+        "<table>"
+        "<tr><th>Air temp</th><th>Light time</th></tr>"
+        "<tr><td>MAX temp: <input type=\"number\" id=\"maxTemp\" name=\"maxTemp\" min=\"0\" title=\"Temp for turn on box fan\"></td>"
+        "<td>Light on: <input type=\"number\" id=\"lightOn\" name=\"lightOn\" min=\"0\" max=\"23\"></td></tr>"
+        
+        "<tr><td>Min temp: <input type=\"number\" id=\"minTemp\" name=\"minTemp\" min=\"0\"></td>"
+        "<td>Light off: <input type=\"number\" id=\"lightOff\" name=\"lightOff\" min=\"0\" max=\"23\"></td></tr>"
+        "</table>"
+        "<input type=\"submit\" value=\"Submit\">"
         "</form>"
+
         "</body>"
         "</html>");
 
@@ -257,6 +252,7 @@ static esp_err_t handle_update_post(httpd_req_t* req) {
     char buf[256];
     int ret, received = 0;
     char maxTemp[32] = {0}, minTemp[32] = {0}, lightOn[32] = {0}, lightOff[32] = {0};
+    // char number_value[32] = {0}; // Buffer to store the number value
 
     int content_len = req->content_len;
 
@@ -297,6 +293,22 @@ static esp_err_t handle_update_post(httpd_req_t* req) {
 
     // Log the values (or handle them as needed)
     ESP_LOGI(TAG, "Max Temp: %s, Min Temp: %s, Light On: %s, Light Off: %s", maxTemp, minTemp, lightOn, lightOff);
+
+    // Extract the number value from the buffer
+    // The form data is now sent as 'maxTemp=entered_number'
+    // char* start = strstr(buf, "maxTemp=");
+    // if (start) {
+    //     start += strlen("maxTemp=");    // Move start pointer to the value
+    //     char* end = strstr(start, "&"); // Find the end of the value
+    //     if (end == NULL) {
+    //         end = buf + received; // If there's no other parameter, end is at the end of the data
+    //     }
+    //     int len = MIN(end - start, sizeof(number_value) - 1);
+    //     strncpy(number_value, start, len);
+    //     number_value[len] = '\0'; // Null terminate the copied value
+    // }
+
+    // ESP_LOGI(TAG, "temp: %s", number_value);
 
     char html_response[1024];
     // Format the HTML response
@@ -386,6 +398,7 @@ static void disconnect_handler(void* arg, esp_event_base_t event_base, int32_t e
             ESP_LOGE(TAG, "Failed to stop http server");
         }
         *server = NULL;
+        http_server = NULL;
     }
 }
 
@@ -405,17 +418,24 @@ bool isHttpServerActive() {
 }
 
 esp_err_t http_server_start(void) {
-    // static httpd_handle_t server = NULL;
 
-    /* Register event handlers to stop the server when Wi-Fi is disconnected,
-     * and re-start it upon connection.
-     */
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &http_server));
-    ESP_ERROR_CHECK(
-        esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &http_server));
+    if (isWifiConnected()) {
 
-    /* Start the server for the first time */
-    http_server = start_webserver();
+        // static httpd_handle_t server = NULL;
 
-    return ESP_OK;
+        /* Register event handlers to stop the server when Wi-Fi is disconnected,
+         * and re-start it upon connection.
+         */
+        ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &http_server));
+        ESP_ERROR_CHECK(
+            esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &http_server));
+
+        /* Start the server for the first time */
+        http_server = start_webserver();
+
+        return ESP_OK;
+    } else {
+        ESP_LOGW(TAG, "WI-FI disconnected");
+        return ESP_FAIL;
+    }
 }

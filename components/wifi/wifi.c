@@ -68,6 +68,7 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
             s_retry_num = 0;
             xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
             ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", ESP_WIFI_SSID, ESP_WIFI_PASS);
+            isConnected = true;
             break;
         }
             // default:{
@@ -78,6 +79,7 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
 }
 
 esp_err_t wifi_sta_init(void) {
+    
     esp_err_t ret_value = ESP_OK;
     s_wifi_event_group = xEventGroupCreate();
 
@@ -111,28 +113,37 @@ esp_err_t wifi_sta_init(void) {
     if (bits & WIFI_CONNECTED_BIT) {
         ESP_LOGW(TAG, "CoreID: %d", xPortGetCoreID());
         ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", ESP_WIFI_SSID, ESP_WIFI_PASS);
+        isConnected = true;
     } else if (bits & WIFI_FAIL_BIT) {
-        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s", ESP_WIFI_SSID, ESP_WIFI_PASS);
-        ret_value = ESP_ERR_TIMEOUT;
+        // ESP_LOGW(TAG, "Failed to connect to SSID:%s, password:%s", ESP_WIFI_SSID, ESP_WIFI_PASS);
+        ESP_LOGW(TAG, "Returned: Failed to connect(ESP_FAIL)");
+        isConnected = false;
+        ret_value = ESP_FAIL;
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
+        isConnected = false;
         ret_value = ESP_ERR_INVALID_STATE;
     }
 
-    isConnected = true;
     return ret_value;
 }
 
-void wifi_sta_reset() {
+esp_err_t wifi_sta_reset() {
 
     if (!isConnected) {
 
         ESP_LOGI(TAG, "Reboot WIFI now");
+        vTaskDelay(pdMS_TO_TICKS(1000));
 
         // deinit wifi_event_group
-        ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler));
-        ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler));
-        ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_LOST_IP, &event_handler));
+        if (esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler) ||
+            esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler) ||
+            esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_LOST_IP, &event_handler) == ESP_FAIL) {
+            ESP_LOGE(TAG, "deinit wifi_event_group error");
+            isConnected = false;
+            return ESP_FAIL;
+        }
+
         xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT);
         vEventGroupDelete(s_wifi_event_group);
         s_wifi_event_group = NULL;
@@ -141,11 +152,18 @@ void wifi_sta_reset() {
         esp_netif_destroy(sta_netif);
 
         // ESP_ERROR_CHECK(esp_wifi_deinit());
-        ESP_ERROR_CHECK(esp_wifi_stop());
-        if (wifi_sta_init() == ESP_OK) {
-            isConnected = true;
+        // ESP_ERROR_CHECK(esp_wifi_stop());
+
+        if (esp_wifi_stop() || wifi_sta_init() == ESP_FAIL) {
+            ESP_LOGE(TAG, "Error during resetting wi-fi");
+            isConnected = false;
+            return ESP_FAIL;
         }
+
+        return ESP_OK;
+
     } else {
         ESP_LOGI(TAG, "Wifi is running");
+        return ESP_OK;
     }
 }
