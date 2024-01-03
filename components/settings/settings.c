@@ -23,26 +23,44 @@ void initializeSettings() {
     airTempMutex = xSemaphoreCreateMutex();
 }
 
-void updateSwitchTime(int ONhour, int OFFhour) {
+// Update light switch time
+void updateSwitchTime(uint8_t ONhour, uint8_t OFFhour){
     if (xSemaphoreTake(lightTimeMutex, portMAX_DELAY)) {
-        if (ONhour >= 0) {
-            settings.lightTime.turnOnHour = (uint8_t)ONhour;
-        }
-        if (OFFhour >= 0) {
-            settings.lightTime.turnOffHour = (uint8_t)OFFhour;
-        }
+        updateTurnONTime(ONhour);
+        updateTurnOFFTime(OFFhour);
+        
         xSemaphoreGive(lightTimeMutex);
     }
 }
 
-void updateAirTemp(int max, int min) {
+void updateTurnONTime(uint8_t ONhour) {
+    if (xSemaphoreTake(lightTimeMutex, portMAX_DELAY)) {
+        settings.lightTime.turnOnHour = (uint8_t)ONhour;
+
+        xSemaphoreGive(lightTimeMutex);
+    }
+}
+
+void updateTurnOFFTime(uint8_t OFFhour) {
+    if (xSemaphoreTake(lightTimeMutex, portMAX_DELAY)) {
+        settings.lightTime.turnOffHour = (uint8_t)OFFhour;
+
+        xSemaphoreGive(lightTimeMutex);
+    }
+}
+
+void updateMinAirTemp(int min) {
     if (xSemaphoreTake(airTempMutex, portMAX_DELAY)) {
-        if (max >= 0) {
-            settings.airTemp.MaxTemp = (uint8_t)max;
-        }
-        if (min >= 0) {
-            settings.airTemp.MinTemp = (uint8_t)min;
-        }
+        settings.airTemp.MinTemp = (uint8_t)min;
+
+        xSemaphoreGive(airTempMutex);
+    }
+}
+
+void updateMaxAirTemp(int max) {
+    if (xSemaphoreTake(airTempMutex, portMAX_DELAY)) {
+        settings.airTemp.MaxTemp = (uint8_t)max;
+
         xSemaphoreGive(airTempMutex);
     }
 }

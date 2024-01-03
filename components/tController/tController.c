@@ -63,17 +63,29 @@ static void LightCheck(uint8_t currentHour) {
 
     getLightTime(&onHour, &offHour);
 
-    if (currentHour >= onHour && currentHour < offHour) {
-        if (!isLightON) {
-            lightingTurnON();
-            isLightON = true;
-        }
-    } else {
-        if (isLightON) {
+    if(isLightON){
+        if (currentHour >= offHour){
             lightingTurnOFF();
             isLightON = false;
         }
+    }else{
+        if (currentHour >= onHour){
+            lightingTurnON();
+            isLightON = true;
+        }
     }
+
+    // if (currentHour >= onHour && currentHour < offHour) {
+    //     if (!isLightON) {
+    //         lightingTurnON();
+    //         isLightON = true;
+    //     }
+    // } else {
+    //     if (isLightON) {
+    //         lightingTurnOFF();
+    //         isLightON = false;
+    //     }
+    // }
 }
 
 // static void LampFanCheck(uint8_t currentHour) {

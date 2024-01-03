@@ -52,6 +52,82 @@ static httpd_handle_t http_server = NULL;
 //     chmok*</p></body></html>"; httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN); return ESP_OK;
 // }
 
+// static esp_err_t main_template(char* page_code, uint32_t page_size) {
+//     char buf[1024];
+
+//     int len = snprintf(buf, sizeof(buf), page_code);
+
+//     if (len < 0 || len >= page_size) {
+//         // Handle error: snprintf failed or buffer size was not enough
+//         return ESP_ERR_INVALID_SIZE;
+//     }
+
+//     len = snprintf(
+//         page_code, page_size,
+//         "<!DOCTYPE html>"
+//         "<html>"
+//         "<head>"
+//         "<title>GARDEN</title>"
+//         "<style>"
+//         "body { background-color: black; color: white; }"
+//         "form {text-align: center; margin-top: 20px;}"
+//         "th, td {border: 1px solid white; text-align: center; padding: 8px;}"
+//         "th {background-color: #333;}"
+//         ".nav-table {position: absolute; top: 0; left: 0; width: 20%%;}"
+//         ".nav-table td {padding: 4px; text-align: center;}"
+//         "</style>"
+//         "</head>"
+
+//         "<body>"
+//         "<table class=\"nav-table\">"
+//         "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\">Main Page</button></form></td></tr>"
+//         "<tr><td><form action=\"/settings\" method=\"get\"><button type=\"submit\">Settings</button></form></td></tr>"
+//         "</table>%s"
+
+//         "</html>",
+//         buf);
+
+//     if (len < 0 || len >= page_size) {
+//         // Handle error: snprintf failed or buffer size was not enough
+//         return ESP_ERR_INVALID_SIZE;
+//     }
+//     return ESP_OK;
+// }
+
+// static esp_err_t send_temp_humidity_page(httpd_req_t* req) {
+//     char html_response[2048]; // Increased size to accommodate additional HTML
+//     uint8_t temperature = getTemp();
+//     uint8_t humidity = getHumidity();
+//     char* dateTimeStr = getStrDateTime(); // Get the date and time string
+
+//     // Format the HTML response to include the navigation buttons and temperature, humidity, and date-time values
+//     int len = snprintf(
+//         html_response, sizeof(html_response),
+//         "<body>"
+//         "<table class=\"nav-table\">"
+//         "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\">Main Page</button></form></td></tr>"
+//         "<tr><td><form action=\"/settings\" method=\"get\"><button type=\"submit\">Settings</button></form></td></tr>"
+//         "</table>"
+//         "<h2 style=\"text-align:center;\">GARDEN</h2>"
+//         "<table>"
+//         "<tr><th colspan=\"2\">%s</th></tr>"
+//         "<tr><td>Temperature</td><td>%d°C</td></tr>"
+//         "<tr><td>Humidity</td><td>%d%%</td></tr>"
+//         "</table>"
+//         "</body>",
+//         dateTimeStr, temperature, humidity);
+
+//     if (len < 0 || len >= sizeof(html_response)) {
+//         // Handle error: snprintf failed or buffer size was not enough
+//         return ESP_ERR_INVALID_SIZE;
+//     }
+
+//     main_template(html_response, sizeof(html_response));
+
+//     // Use the actual length of the response
+//     return httpd_resp_send(req, html_response, len);
+// }
+
 static esp_err_t send_temp_humidity_page(httpd_req_t* req) {
     char html_response[2048]; // Increased size to accommodate additional HTML
     uint8_t temperature = getTemp();
@@ -129,9 +205,10 @@ static esp_err_t send_settings_page(httpd_req_t* req) {
         "<form action=\"/update\" method=\"post\">"
         "<table>"
         "<tr><th>Air temp</th><th>Light time</th></tr>"
-        "<tr><td>MAX temp: <input type=\"number\" id=\"maxTemp\" name=\"maxTemp\" min=\"0\" title=\"Temp for turn on box fan\"></td>"
+        "<tr><td>MAX temp: <input type=\"number\" id=\"maxTemp\" name=\"maxTemp\" min=\"0\" title=\"Temp for turn on "
+        "box fan\"></td>"
         "<td>Light on: <input type=\"number\" id=\"lightOn\" name=\"lightOn\" min=\"0\" max=\"23\"></td></tr>"
-        
+
         "<tr><td>Min temp: <input type=\"number\" id=\"minTemp\" name=\"minTemp\" min=\"0\"></td>"
         "<td>Light off: <input type=\"number\" id=\"lightOff\" name=\"lightOff\" min=\"0\" max=\"23\"></td></tr>"
         "</table>"
@@ -156,103 +233,12 @@ esp_err_t http_404_error_handler(httpd_req_t* req, httpd_err_code_t err) {
     return ESP_FAIL;
 }
 
-// static esp_err_t handle_update_post(httpd_req_t* req) {
-//     char html_response[1024];
-//     char buf[100];
-//     int ret, received = 0;
-//     char number_value[32] = {0}; // Buffer to store the number value
-
-//     int content_len = req->content_len;
-
-//     while (received < content_len) {
-//         /* Read the data for the request */
-//         if ((ret = httpd_req_recv(req, buf + received, MIN(content_len - received, sizeof(buf) - received))) <= 0) {
-//             if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
-//                 continue;
-//             }
-//             return ESP_FAIL;
-//         }
-
-//         received += ret;
-//     }
-
-//     // Null terminate the buffer
-//     buf[received] = '\0';
-
-//     // Extract the number value from the buffer
-//     // The form data is now sent as 'numberInput=entered_number'
-//     char* start = strstr(buf, "numberInput=");
-//     if (start) {
-//         start += strlen("numberInput="); // Move start pointer to the value
-//         char* end = strstr(start, "&");  // Find the end of the value
-//         if (end == NULL) {
-//             end = buf + received; // If there's no other parameter, end is at the end of the data
-//         }
-//         int len = MIN(end - start, sizeof(number_value) - 1);
-//         strncpy(number_value, start, len);
-//         number_value[len] = '\0'; // Null terminate the copied value
-//     }
-
-//     ESP_LOGI(TAG, "Number entered: %s", number_value);
-
-//     // Format the HTML response
-//     int len = snprintf(
-//         html_response, sizeof(html_response),
-//         "<!DOCTYPE html>"
-//         "<html>"
-//         "<head>"
-//         "<title>GARDEN</title>"
-//         "<style>"
-//         "body { background-color: black; color: white; }"
-//         "form {text-align: center; margin-top: 20px;}"
-//         "th, td {border: 1px solid white; text-align: center; padding: 8px;}"
-//         "th {background-color: #333;}"
-//         ".nav-table {position: absolute; top: 0; left: 0; width: 20%%;}"
-//         ".nav-table td {padding: 4px; text-align: center;}"
-//         "</style>"
-//         "</head>"
-
-//         "<body>"
-//         "<table class=\"nav-table\">"
-//         "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\">Main Page</button></form></td></tr>"
-//         "<tr><td><form action=\"/settings\" method=\"get\"><button
-//         type=\"submit\">Settings</button></form></td></tr>"
-//         "</table>"
-//         "<h2 style=\"text-align:center;\">Updated succesfully</h2>"
-
-//         "</body>"
-//         "</html>");
-
-//     if (len < 0 || len >= sizeof(html_response)) {
-//         // Handle error: snprintf failed or buffer size was not enough
-//         return ESP_ERR_INVALID_SIZE;
-//     }
-
-//     // Send a response
-//     // Use the actual length of the response
-//     return httpd_resp_send(req, html_response, len);
-// }
-
-// Function to extract data from the buffer
-// void extract_data(const char* field_name, char* output, int output_size) {
-//     char* start = strstr(buf, field_name);
-//     if (start) {
-//         start += strlen(field_name);    // Move start pointer to the value
-//         char* end = strstr(start, "&"); // Find the end of the value
-//         if (end == NULL) {
-//             end = buf + received; // If there's no other parameter, end is at the end of the data
-//         }
-//         int len = MIN(end - start, output_size - 1);
-//         strncpy(output, start, len);
-//         output[len] = '\0'; // Null terminate the copied value
-//     }
-// }
-
 static esp_err_t handle_update_post(httpd_req_t* req) {
     char buf[256];
     int ret, received = 0;
-    char maxTemp[32] = {0}, minTemp[32] = {0}, lightOn[32] = {0}, lightOff[32] = {0};
+    // char maxTemp[32] = {0}, minTemp[32] = {0}, lightOn[32] = {0}, lightOff[32] = {0};
     // char number_value[32] = {0}; // Buffer to store the number value
+    int maxTemp, minTemp, lightOn, lightOff;
 
     int content_len = req->content_len;
 
@@ -271,7 +257,8 @@ static esp_err_t handle_update_post(httpd_req_t* req) {
     buf[received] = '\0';
 
     // Function to extract data from the buffer
-    void extract_data(const char* field_name, char* output, int output_size) {
+    int8_t extract_data(const char* field_name) {
+        char output[16];
         char* start = strstr(buf, field_name);
         if (start) {
             start += strlen(field_name);    // Move start pointer to the value
@@ -279,36 +266,49 @@ static esp_err_t handle_update_post(httpd_req_t* req) {
             if (end == NULL) {
                 end = buf + received; // If there's no other parameter, end is at the end of the data
             }
-            int len = MIN(end - start, output_size - 1);
+            int len = MIN(end - start, sizeof(output) - 1);
+            if (len == 0){
+                return -1;
+            }
+            printf("len:%d", len);
             strncpy(output, start, len);
             output[len] = '\0'; // Null terminate the copied value
+            return atoi(output);
         }
+        return -1;
     }
 
     // Extract values from all fields
-    extract_data("maxTemp=", maxTemp, sizeof(maxTemp));
-    extract_data("minTemp=", minTemp, sizeof(minTemp));
-    extract_data("lightOn=", lightOn, sizeof(lightOn));
-    extract_data("lightOff=", lightOff, sizeof(lightOff));
+    // extract_data("maxTemp=", maxTemp, sizeof(maxTemp));
+    // extract_data("minTemp=", minTemp, sizeof(minTemp));
+    // extract_data("lightOn=", lightOn, sizeof(lightOn));
+    // extract_data("lightOff=", lightOff, sizeof(lightOff));
+
+
+
+    maxTemp = extract_data("maxTemp=");
+    if(maxTemp >= 0){
+        updateMaxAirTemp(maxTemp);
+    }
+
+    minTemp = extract_data("minTemp=");
+    if(minTemp >= 0){
+        updateMinAirTemp(minTemp);
+    }
+
+    lightOn = extract_data("lightOn=");
+    if(lightOn >= 0){
+        updateTurnONTime(lightOn);
+    }
+
+    lightOff = extract_data("lightOff=");
+    if(lightOff >= 0){
+        updateTurnOFFTime(lightOff);
+    }
 
     // Log the values (or handle them as needed)
-    ESP_LOGI(TAG, "Max Temp: %s, Min Temp: %s, Light On: %s, Light Off: %s", maxTemp, minTemp, lightOn, lightOff);
-
-    // Extract the number value from the buffer
-    // The form data is now sent as 'maxTemp=entered_number'
-    // char* start = strstr(buf, "maxTemp=");
-    // if (start) {
-    //     start += strlen("maxTemp=");    // Move start pointer to the value
-    //     char* end = strstr(start, "&"); // Find the end of the value
-    //     if (end == NULL) {
-    //         end = buf + received; // If there's no other parameter, end is at the end of the data
-    //     }
-    //     int len = MIN(end - start, sizeof(number_value) - 1);
-    //     strncpy(number_value, start, len);
-    //     number_value[len] = '\0'; // Null terminate the copied value
-    // }
-
-    // ESP_LOGI(TAG, "temp: %s", number_value);
+    // ESP_LOGI(TAG, "Max Temp: %s, Min Temp: %s, Light On: %s, Light Off: %s", maxTemp, minTemp, lightOn, lightOff);
+    ESP_LOGI(TAG, "Max Temp: %d, Min Temp: %d, Light On: %d, Light Off: %d", maxTemp, minTemp, lightOn, lightOff);
 
     char html_response[1024];
     // Format the HTML response

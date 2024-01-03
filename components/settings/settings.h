@@ -34,12 +34,13 @@ void initializeSettings();
  * 
  * This function updates the global settings for the lighting control system.
  * It sets the hours when the light should be turned on and off.
- * If a parameter is set to -1, the corresponding time will not be changed.
  *
- * @param ONhour The hour to turn the light on. Range: 0-23, or -1 for no change.
- * @param OFFhour The hour to turn the light off. Range: 0-23, or -1 for no change.
+ * @param ONhour The hour to turn the light on. Range: 0-23
+ * @param OFFhour The hour to turn the light off. Range: 0-23
  */
-void updateSwitchTime(int ONhour, int OFFhour);
+void updateSwitchTime(uint8_t ONhour, uint8_t OFFhour);
+void updateTurnOFFTime(uint8_t OFFhour);
+void updateTurnONTime(uint8_t ONhour);
 
 /**
  * @brief Update the temperature thresholds for air control.
@@ -47,7 +48,9 @@ void updateSwitchTime(int ONhour, int OFFhour);
  * @param max The maximum temperature threshold in Celsius. Range: valid temp range or -1 for no change.
  * @param min The minimum temperature threshold in Celsius. Range: valid temp range or -1 for no change.
  */
-void updateAirTemp(int max, int min);
+void updateMinAirTemp(int min);
+
+void updateMaxAirTemp(int max);
 
 
 /**
