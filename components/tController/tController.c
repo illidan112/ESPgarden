@@ -136,15 +136,19 @@ static void ServerRestart() {
 static void HandleEvent(const controllerEvent event) {
     switch (event) {
     case SCAN:
-        uint8_t currentHour = hoursNow();
-        uint8_t currentTemp = getTemp();
-        uint8_t currentHumidity = getHumidity();
+        int32_t currentTemp;
+        uint32_t currentHumidity;
+        int currentHour = 0;
+
+        if (getAirData(&currentTemp, &currentHumidity) != ESP_OK){
+            ESP_LOGE(TAG, "cant get air data");
+        }
 
         LightCheck(currentHour);
         BoxFanCheck(currentTemp);
 
         char* dataTimeStr = getStrDateTime();
-        ESP_LOGI(TAG, "%s: Temp %d°C, Humd %d%%", dataTimeStr, currentTemp, currentHumidity);
+        ESP_LOGI(TAG, "%s: Temp %d°C, Humd %d%%", dataTimeStr, (int)currentTemp, (int)currentHumidity);
         break;
 
     case SERVER_RESTART:
@@ -163,9 +167,13 @@ void ControllerTask(void* pvParameters) {
     (void)pvParameters;
 
     timeInit();
+    printf("1");
     airSensorInit();
+    printf("2");
     lightingInit();
-    fanInit();
+    printf("3");
+    // fanInit();
+    printf("init compl");
 
     /*TODO: Initialization of all setting
     should be in another place*/

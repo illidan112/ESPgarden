@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <esp_err.h>
 
-void stringDateTime();
+// void stringDateTime();
 
 char* getStrDateTime();
 

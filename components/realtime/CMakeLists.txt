@@ -1,3 +1,3 @@
 idf_component_register(SRCS "realtime.c"
                     INCLUDE_DIRS "."
-                    REQUIRES "freertos")
+                    REQUIRES ds3231 "freertos")
