@@ -20,22 +20,21 @@
 const static char* TAG = "RTC";
 char dataTimeStr[DATA_TIME_SIZE];
 SemaphoreHandle_t timeMutex;
-static i2c_dev_t dev;
+static i2c_dev_t ds3231Desc;
 
 esp_err_t init_ds3231(gpio_num_t sda_pin, gpio_num_t scl_pin) {
-    ESP_ERROR_CHECK(i2cdev_init());
-    memset(&dev, 0, sizeof(i2c_dev_t));
-    return ds3231_init_desc(&dev, I2C_NUM_1, sda_pin, scl_pin);
+    memset(&ds3231Desc, 0, sizeof(i2c_dev_t));
+    return ds3231_init_desc(&ds3231Desc, I2C_NUM_0, sda_pin, scl_pin);
 }
 
 esp_err_t get_time_ds3231(struct tm* time) { 
     if(time != NULL){
-        return ds3231_get_time(&dev, time);
+        return ds3231_get_time(&ds3231Desc, time);
     }
     return ESP_FAIL;
 }
 
-esp_err_t set_time_ds3231(struct tm* time) { return ds3231_set_time(&dev, time); }
+esp_err_t set_time_ds3231(struct tm* time) { return ds3231_set_time(&ds3231Desc, time); }
 
 esp_err_t timeInit() {
 

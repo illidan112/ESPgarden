@@ -63,13 +63,13 @@ static void LightCheck(uint8_t currentHour) {
 
     getLightTime(&onHour, &offHour);
 
-    if(isLightON){
-        if (currentHour >= offHour){
+    if (isLightON) {
+        if (currentHour >= offHour) {
             lightingTurnOFF();
             isLightON = false;
         }
-    }else{
-        if (currentHour >= onHour){
+    } else {
+        if (currentHour >= onHour) {
             lightingTurnON();
             isLightON = true;
         }
@@ -136,11 +136,11 @@ static void ServerRestart() {
 static void HandleEvent(const controllerEvent event) {
     switch (event) {
     case SCAN:
-        int32_t currentTemp;
-        uint32_t currentHumidity;
+        uint8_t currentTemp;
+        uint8_t currentHumidity;
         int currentHour = 0;
 
-        if (getAirData(&currentTemp, &currentHumidity) != ESP_OK){
+        if (getAirData(&currentTemp, &currentHumidity) != ESP_OK) {
             ESP_LOGE(TAG, "cant get air data");
         }
 
@@ -148,7 +148,7 @@ static void HandleEvent(const controllerEvent event) {
         BoxFanCheck(currentTemp);
 
         char* dataTimeStr = getStrDateTime();
-        ESP_LOGI(TAG, "%s: Temp %d°C, Humd %d%%", dataTimeStr, (int)currentTemp, (int)currentHumidity);
+        ESP_LOGI(TAG, "%s: Temp %d°C, Humd %d%%", dataTimeStr, currentTemp, currentHumidity);
         break;
 
     case SERVER_RESTART:
@@ -166,14 +166,10 @@ static void HandleEvent(const controllerEvent event) {
 void ControllerTask(void* pvParameters) {
     (void)pvParameters;
 
-    timeInit();
-    printf("1");
-    airSensorInit();
-    printf("2");
+    ESP_ERROR_CHECK(airSensorInit());
+    ESP_ERROR_CHECK(timeInit());
     lightingInit();
-    printf("3");
-    // fanInit();
-    printf("init compl");
+    fanInit();
 
     /*TODO: Initialization of all setting
     should be in another place*/

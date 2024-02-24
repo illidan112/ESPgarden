@@ -24,13 +24,9 @@ void initializeSettings() {
 }
 
 // Update light switch time
-void updateSwitchTime(uint8_t ONhour, uint8_t OFFhour){
-    if (xSemaphoreTake(lightTimeMutex, portMAX_DELAY)) {
-        updateTurnONTime(ONhour);
-        updateTurnOFFTime(OFFhour);
-        
-        xSemaphoreGive(lightTimeMutex);
-    }
+void updateSwitchTime(uint8_t ONhour, uint8_t OFFhour) {
+    updateTurnONTime(ONhour);
+    updateTurnOFFTime(OFFhour);
 }
 
 void updateTurnONTime(uint8_t ONhour) {

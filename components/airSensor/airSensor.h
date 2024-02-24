@@ -4,7 +4,7 @@
 #ifndef AIRSENSORS_H
 #define AIRSENSORS_H
 
-esp_err_t getAirData(int32_t* temp, uint32_t* hum);
+esp_err_t getAirData(uint8_t* temp, uint8_t* hum);
 
 esp_err_t airSensorInit();
 
