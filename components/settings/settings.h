@@ -3,6 +3,12 @@
 
 #include <stdint.h>
 
+// Available events in priority order
+typedef enum {
+    STORE = 0,
+
+} settEvent;
+
 typedef struct {
     uint8_t turnOnHour;
     uint8_t turnOnMinute;
@@ -29,9 +35,13 @@ extern SettingsData settings;
 
 void initializeSettings();
 
+void SettingsTask(void* pvParameters);
+void SendSettEvent(const settEvent event);
+
+
 /**
  * @brief Update the scheduled times for turning the light on and off.
- * 
+ *
  * This function updates the global settings for the lighting control system.
  * It sets the hours when the light should be turned on and off.
  *
@@ -52,10 +62,9 @@ void updateMinAirTemp(int min);
 
 void updateMaxAirTemp(int max);
 
-
 /**
  * @brief Retrieve the current air temperature thresholds.
- * 
+ *
  * This function reads the global air temperature settings (maximum and minimum thresholds)
  * and stores them in the provided pointer parameters. It ensures thread-safe access to these settings
  * by using mutex locking.
@@ -65,10 +74,9 @@ void updateMaxAirTemp(int max);
  */
 void getAirTemp(uint8_t* maxTemp, uint8_t* minTemp);
 
-
 /**
  * @brief Retrieve the current scheduled times for lighting control.
- * 
+ *
  * This function reads the global settings for the lighting control times (turn on and off hours)
  * and stores them in the provided pointer parameters. It ensures thread-safe access to these settings
  * by using mutex locking.
@@ -77,7 +85,5 @@ void getAirTemp(uint8_t* maxTemp, uint8_t* minTemp);
  * @param turnOffHour Pointer to store the hour to turn the light off.
  */
 void getLightTime(uint8_t* turnOnHour, uint8_t* turnOffHour);
-
-
 
 #endif

@@ -27,8 +27,8 @@ esp_err_t init_ds3231(gpio_num_t sda_pin, gpio_num_t scl_pin) {
     return ds3231_init_desc(&ds3231Desc, I2C_NUM_0, sda_pin, scl_pin);
 }
 
-esp_err_t get_time_ds3231(struct tm* time) { 
-    if(time != NULL){
+esp_err_t get_time_ds3231(struct tm* time) {
+    if (time != NULL) {
         return ds3231_get_time(&ds3231Desc, time);
     }
     return ESP_FAIL;
@@ -96,6 +96,25 @@ uint8_t hoursNow() {
         xSemaphoreGive(timeMutex);
     }
     return timeinfo.tm_hour;
+}
+
+int32_t UnixTime() {
+
+    time_t timeNow;
+    int32_t safe_now = 0;
+
+    if (xSemaphoreTake(timeMutex, portMAX_DELAY)) {
+        time(&timeNow);
+
+        if (timeNow > INT32_MAX || timeNow < INT32_MIN) {
+            ESP_LOGE(TAG, "ERROR: time_t > INT32_MAX\n");
+        } else {
+            int32_t safe_now = (int32_t)timeNow;
+        }
+
+        xSemaphoreGive(timeMutex);
+    }
+    return safe_now;
 }
 
 // void stringDateTime() {

@@ -8,7 +8,7 @@ typedef enum {
     SCAN = 0,
     SERVER_RESTART,
 
-}controllerEvent;
+} controllerEvent;
 
 // typedef struct {
 //     controllerEvent eventType;
@@ -20,7 +20,6 @@ typedef enum {
 //         // other structures
 //     } eventData;
 // } ControllerEventInfo;
-
 
 void ControllerTask(void* pvParameters);
 void SendControllerEvent(const controllerEvent event);

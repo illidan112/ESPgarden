@@ -17,15 +17,26 @@
 
 #define STACK_SIZE 4096
 #define HIGH_PRIORITY 1
+#define LOW_PRIORITY 0
 
 #define BLINK_GPIO GPIO_NUM_32
 
-// const static char* TAG = "MAIN";
+const static char* TAG = "MAIN";
 
 void app_main(void) {
 
     // Initialize NVS
-    ESP_ERROR_CHECK(nvs_flash_init());
+    esp_err_t err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        // NVS partition was truncated and needs to be erased
+        // Retry nvs_flash_init
+        ESP_LOGE(TAG, "NVS Init ERROR. NVS will be erase");
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK( err );
+
+
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     // Initialize I2C for bme280 and ds3231
@@ -33,6 +44,7 @@ void app_main(void) {
 
     initializeSettings();
 
-    xTaskCreate(ControllerTask, "Controller Task", STACK_SIZE, NULL, HIGH_PRIORITY, NULL);
+    xTaskCreate(ControllerTask, "Controller Task", STACK_SIZE, NULL, LOW_PRIORITY, NULL);
+    xTaskCreate(SettingsTask, "Settings Task", STACK_SIZE, NULL, HIGH_PRIORITY, NULL);
     // xTaskCreate(ExecutorTask, "Executor Task", STACK_SIZE, NULL, HIGH_PRIORITY, NULL);
 }

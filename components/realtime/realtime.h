@@ -11,6 +11,8 @@ char* getStrDateTime();
 
 esp_err_t timeInit();
 
+int32_t UnixTime();
+
 /**
  * @brief returns the current hour of day.
  */
