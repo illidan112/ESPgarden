@@ -6,7 +6,6 @@
 // Available events in priority order
 typedef enum {
     SCAN = 0,
-    SERVER_RESTART,
 
 } controllerEvent;
 

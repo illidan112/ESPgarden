@@ -1,4 +1,3 @@
-// #include "driver/gpio.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_netif.h"
@@ -14,6 +13,7 @@
 #include "tController.h"
 // #include "tExecutor.h"
 #include "settings.h"
+#include "httpServer.h"
 
 #define STACK_SIZE 4096
 #define HIGH_PRIORITY 1
@@ -44,7 +44,8 @@ void app_main(void) {
 
     initializeSettings();
 
-    xTaskCreate(ControllerTask, "Controller Task", STACK_SIZE, NULL, LOW_PRIORITY, NULL);
+    xTaskCreate(ControllerTask, "Plant control", STACK_SIZE, NULL, LOW_PRIORITY, NULL);
+    xTaskCreate(ServerTask, "Server Task", STACK_SIZE, NULL, LOW_PRIORITY, NULL);
     xTaskCreate(SettingsTask, "Settings Task", STACK_SIZE, NULL, HIGH_PRIORITY, NULL);
     // xTaskCreate(ExecutorTask, "Executor Task", STACK_SIZE, NULL, HIGH_PRIORITY, NULL);
 }

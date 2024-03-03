@@ -7,7 +7,7 @@
 // Initialize and start the Wi-Fi in STA mode
 esp_err_t wifi_sta_init();
 
-esp_err_t wifi_sta_reset() ;
+esp_err_t wifi_sta_stop();
 
 bool isWifiConnected();
 

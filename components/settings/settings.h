@@ -15,7 +15,6 @@ typedef struct {
 
     uint8_t turnOffHour;
     uint8_t turnOffMinute;
-    uint8_t durationHours;
 
 } LightTime;
 
