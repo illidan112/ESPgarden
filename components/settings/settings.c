@@ -81,6 +81,8 @@ void initializeSettings() {
         settings.airTemp.MinTemp = 0;
     } else {
         ESP_LOGW(TAG, "Got settings from NVS");
+        ESP_LOGI(TAG, "turnOnHour:%d, turnOffHour:%d, MaxTemp:%d", settings.lightTime.turnOnHour,
+                 settings.lightTime.turnOffHour, settings.airTemp.MaxTemp);
     }
 
     lightTimeMutex = xSemaphoreCreateMutex();
@@ -190,6 +192,7 @@ static void storeAllSettgs() {
             ESP_LOGE(TAG, "NVS write turnOffHour ERROR.");
         }
 
+        // TEMP
         if (nvs_set_u8(my_handle, "MinTemp", settings.airTemp.MinTemp) != ESP_OK) {
             ESP_LOGE(TAG, "NVS write MinTemp ERROR.");
         }
@@ -219,6 +222,9 @@ static void HandleEvent(const settEvent event) {
         ESP_LOGI(TAG, "Store all settings");
         // storeTime();
         storeAllSettgs();
+
+        break;
+    case UPDATE_RTC:
 
         break;
     }

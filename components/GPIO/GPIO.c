@@ -5,10 +5,10 @@
 
 #define ESP_INTR_FLAG_DEFAULT 0
 
-#define LIGHTING1   GPIO_NUM_5
+#define LIGHTING1   GPIO_NUM_32
 #define LIGHTING2   GPIO_NUM_33
-#define BUTTON1     GPIO_NUM_32
-#define FAN1        GPIO_NUM_25
+#define FAN1        GPIO_NUM_14
+#define BUTTON1     GPIO_NUM_23
 
 static uint8_t LighingState = 0;
 const static char* TAG = "GPIO";

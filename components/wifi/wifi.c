@@ -23,8 +23,8 @@
     Change the below entries to strings with
     the config you want - ie #define  ESP_WIFI_SSID "mywifissid"
 */
-#define ESP_WIFI_SSID "iPhone (Ilya)"
-#define ESP_WIFI_PASS "Abobaaboba112"
+#define ESP_WIFI_SSID "TrueWIFI"
+#define ESP_WIFI_PASS "qwerty4321"
 #define ESP_MAXIMUM_RETRY 5
 
 /* FreeRTOS event group to signal when we are connected*/

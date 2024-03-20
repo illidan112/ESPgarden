@@ -6,6 +6,7 @@
 // Available events in priority order
 typedef enum {
     STORE = 0,
+    UPDATE_RTC,
 
 } settEvent;
 
