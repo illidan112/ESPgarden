@@ -71,17 +71,18 @@ static esp_err_t send_temp_humidity_page(httpd_req_t* req) {
         "th {background-color: #333;}"
         ".nav-table {position: absolute; top: 0; left: 0; width: 20%%;}"
         ".nav-table td {padding: 4px; text-align: center;}"
+        ".nav-button {width: 150px; height: 50px;}"
         "table {margin-left: auto; margin-right: auto; margin-top: 20px;}"
         "</style>"
         "</head>"
 
         "<body>"
         "<table class=\"nav-table\">"
-        "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\">Main Page</button></form></td></tr>"
-        "<tr><td><form action=\"/settime\" method=\"get\"><button type=\"submit\">Switching "
+        "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Main Page</button></form></td></tr>"
+        "<tr><td><form action=\"/settime\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Switching "
         "Time</button></form></td></tr>"
-        "<tr><td><form action=\"/settemp\" method=\"get\"><button type=\"submit\">Tempreture</button></form></td></tr>"
-        "<tr><td><form action=\"/setrtc\" method=\"get\"><button type=\"submit\">Clock</button></form></td></tr>"
+        "<tr><td><form action=\"/settemp\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Tempreture</button></form></td></tr>"
+        "<tr><td><form action=\"/setrtc\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Clock</button></form></td></tr>"
         "</table>"
 
         "<h2 style=\"text-align:center;\">GARDEN</h2>"
@@ -103,69 +104,9 @@ static esp_err_t send_temp_humidity_page(httpd_req_t* req) {
     return httpd_resp_send(req, html_response, len);
 }
 
-// static esp_err_t send_settings_page(httpd_req_t* req) {
-//     char html_response[1500];
-
-//     // Format the HTML response to include a form with a dropdown and a button
-//     int len = snprintf(
-//         html_response, sizeof(html_response),
-//         "<!DOCTYPE html>"
-//         "< html >"
-//         "<head>"
-//         "<title>GARDEN</title>"
-//         "<style>"
-//         "body { background-color: black; color: white; }"
-//         "form {text-align: center; margin-top: 20px;}"
-//         "th, td {border: 1px solid white; text-align: center; padding: 8px;}"
-//         "th {background-color: #333;}"
-//         ".nav-table {position: absolute; top: 0; left: 0; width: 20%%;}"
-//         ".nav-table td {padding: 4px; text-align: center;}"
-//         "table {margin-left: auto; margin-right: auto; margin-top: 20px;}"
-//         "</style>"
-//         "</head>"
-
-//         "<body>"
-//         "<table class=\"nav-table\">"
-//         "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\">Main Page</button></form></td></tr>"
-//         "<tr><td><form action=\"/settings\" method=\"get\"><button "
-//         "type=\"submit\">Settings</button></form></td></tr>"
-//         "</table>"
-
-//         "<h2 style=\"text-align:center;\">Select Settings</h2>"
-
-//         // "<form action=\"/change\" method=\"get\">"
-//         // "<button type=\"submit\">Change Time/Data</button>"
-//         // "</form>"
-
-//         "<form action=\"/update\" method=\"post\">"
-//         "<table>"
-//         "<tr><th>Air temp</th><th>Light time</th></tr>"
-//         "<tr><td>MAX temp: <input type=\"number\" id=\"maxTemp\" name=\"maxTemp\" min=\"0\" title=\"Temp for turn "
-//         "on "
-//         "box fan\"></td>"
-//         "<td>Light on: <input type=\"number\" id=\"lightOn\" name=\"lightOn\" min=\"0\" max=\"23\"></td></tr>"
-
-//         "<tr><td>Min temp: <input type=\"number\" id=\"minTemp\" name=\"minTemp\" min=\"0\"></td>"
-//         "<td>Light off: <input type=\"number\" id=\"lightOff\" name=\"lightOff\" min=\"0\" max=\"23\"></td></tr>"
-//         "</table>"
-//         "<input type=\"submit\" value=\"Submit\">"
-//         "</form>"
-
-//         "</body>"
-//         "</html>");
-
-//     if (len < 0 || len >= sizeof(html_response)) {
-//         // Handle error: snprintf failed or buffer size was not enough
-//         return ESP_ERR_INVALID_SIZE;
-//     }
-
-//     // Use the actual length of the response
-//     return httpd_resp_send(req, html_response, len);
-// }
-
 // Function to send settings page for time
 static esp_err_t send_rtc_settings_page(httpd_req_t* req) {
-    char html_response[1300];
+    char html_response[1350];
 
     // Format the HTML response to include a form for time settings
     int len = snprintf(
@@ -182,6 +123,7 @@ static esp_err_t send_rtc_settings_page(httpd_req_t* req) {
         "th {background-color: #333;}"
         ".nav-table {position: absolute; top: 0; left: 0; width: 20%%;}"
         ".nav-table td {padding: 4px; text-align: center;}"
+        ".nav-button {width: 150px; height: 50px;}"
         "table {margin-left: auto; margin-right: auto; margin-top: 20px;}"
         "</style>"
         "</head>"
@@ -189,11 +131,11 @@ static esp_err_t send_rtc_settings_page(httpd_req_t* req) {
         "<body>"
 
         "<table class=\"nav-table\">"
-        "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\">Main Page</button></form></td></tr>"
-        "<tr><td><form action=\"/settime\" method=\"get\"><button type=\"submit\">Switching "
+        "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Main Page</button></form></td></tr>"
+        "<tr><td><form action=\"/settime\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Switching "
         "Time</button></form></td></tr>"
-        "<tr><td><form action=\"/settemp\" method=\"get\"><button type=\"submit\">Tempreture</button></form></td></tr>"
-        "<tr><td><form action=\"/setrtc\" method=\"get\"><button type=\"submit\">Clock</button></form></td></tr>"
+        "<tr><td><form action=\"/settemp\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Tempreture</button></form></td></tr>"
+        "<tr><td><form action=\"/setrtc\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Clock</button></form></td></tr>"
         "</table>"
 
         "<h2 style=\"text-align:center;\">Clock Settings</h2>"
@@ -203,7 +145,6 @@ static esp_err_t send_rtc_settings_page(httpd_req_t* req) {
         "<tr>"
         "<th>Time</th>"
         "<th>Date</th>"
-        "<th>Unix Time</th>"
         "</tr>"
         "<tr>"
         "<td>"
@@ -211,9 +152,6 @@ static esp_err_t send_rtc_settings_page(httpd_req_t* req) {
         "</td>"
         "<td>"
         "<input type=\"date\" id=\"date\" name=\"date\">"
-        "</td>"
-        "<td>"
-        "<input type=\"number\" id=\"unix\" name=\"unix\" min=\"0\">"
         "</td>"
         "</tr>"
         "</table>"
@@ -232,7 +170,11 @@ static esp_err_t send_rtc_settings_page(httpd_req_t* req) {
 
 // Function to send settings page for temperature
 static esp_err_t send_temperature_settings_page(httpd_req_t* req) {
-    char html_response[1300];
+    char html_response[1590];
+    uint8_t maxTemp = 0;
+    uint8_t minTemp = 0;
+
+    getAirTemp(&maxTemp, &minTemp);
 
     // Format the HTML response to include a form for temperature settings
     int len = snprintf(
@@ -249,6 +191,7 @@ static esp_err_t send_temperature_settings_page(httpd_req_t* req) {
         "th {background-color: #333;}"
         ".nav-table {position: absolute; top: 0; left: 0; width: 20%%;}"
         ".nav-table td {padding: 4px; text-align: center;}"
+        ".nav-button {width: 150px; height: 50px;}"
         "table {margin-left: auto; margin-right: auto; margin-top: 20px;}"
         "</style>"
         "</head>"
@@ -256,14 +199,28 @@ static esp_err_t send_temperature_settings_page(httpd_req_t* req) {
         "<body>"
 
         "<table class=\"nav-table\">"
-        "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\">Main Page</button></form></td></tr>"
-        "<tr><td><form action=\"/settime\" method=\"get\"><button type=\"submit\">Switching "
+        "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Main Page</button></form></td></tr>"
+        "<tr><td><form action=\"/settime\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Switching "
         "Time</button></form></td></tr>"
-        "<tr><td><form action=\"/settemp\" method=\"get\"><button type=\"submit\">Tempreture</button></form></td></tr>"
-        "<tr><td><form action=\"/setrtc\" method=\"get\"><button type=\"submit\">Clock</button></form></td></tr>"
+        "<tr><td><form action=\"/settemp\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Tempreture</button></form></td></tr>"
+        "<tr><td><form action=\"/setrtc\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Clock</button></form></td></tr>"
         "</table>"
 
         "<h2 style=\"text-align:center;\">Temperature Settings</h2>"
+
+        "<table align=\"center\">"
+        "<tr>"
+        "<th colspan=\"2\">Current setting</th>"
+        "</tr>"
+        "<tr>"
+        "<td class=\"label\">Max temp:</td>"
+        "<td class=\"data\">\"%d *C\"</td>"
+        "</tr>"
+        "<tr>"
+        "<td class=\"label\">Min temp:</td>"
+        "<td class=\"data\">\"%d *C\"</td>"
+        "</tr>"
+        "</table>"
 
         "<form action=\"/update_temp\" method=\"post\">"
         "<table align=\"center\">"
@@ -273,10 +230,10 @@ static esp_err_t send_temperature_settings_page(httpd_req_t* req) {
         "</tr>"
         "<tr>"
         "<td>"
-        "<input type=\"number\" id=\"max_temp\" name=\"max_temp\" min=\"0\">"
+        "<input type=\"number\" id=\"maxtmp\" name=\"maxtmp\" min=\"0\">"
         "</td>"
         "<td>"
-        "<input type=\"number\" id=\"min_temp\" name=\"min_temp\" min=\"0\">"
+        "<input type=\"number\" id=\"mintmp\" name=\"mintmp\" min=\"0\">"
         "</td>"
         "</tr>"
         "</table>"
@@ -284,7 +241,8 @@ static esp_err_t send_temperature_settings_page(httpd_req_t* req) {
         "</form>"
 
         "</body>"
-        "</html>");
+        "</html>",
+        maxTemp, minTemp);
 
     if (len < 0 || len >= sizeof(html_response)) {
         return ESP_ERR_INVALID_SIZE;
@@ -294,8 +252,12 @@ static esp_err_t send_temperature_settings_page(httpd_req_t* req) {
 }
 
 // Function to send settings page for pressure
-static esp_err_t send_schdlr_time_page(httpd_req_t* req) {
-    char html_response[1300];
+static esp_err_t send_schdlr_time_sett_page(httpd_req_t* req) {
+    char html_response[1650];
+    uint8_t onHour = 0;
+    uint8_t offHour = 0;
+
+    getLightTime(&onHour, &offHour);
 
     // Format the HTML response to include a form for pressure settings
     int len = snprintf(
@@ -312,19 +274,36 @@ static esp_err_t send_schdlr_time_page(httpd_req_t* req) {
         "th {background-color: #333;}"
         ".nav-table {position: absolute; top: 0; left: 0; width: 20%%;}"
         ".nav-table td {padding: 4px; text-align: center;}"
+        ".nav-button {width: 150px; height: 50px;}"
         "table {margin-left: auto; margin-right: auto; margin-top: 20px;}"
         "</style>"
         "</head>"
 
         "<body>"
+
         "<table class=\"nav-table\">"
-        "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\">Main Page</button></form></td></tr>"
-        "<tr><td><form action=\"/settime\" method=\"get\"><button type=\"submit\">Switching "
+        "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Main Page</button></form></td></tr>"
+        "<tr><td><form action=\"/settime\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Switching "
         "Time</button></form></td></tr>"
-        "<tr><td><form action=\"/settemp\" method=\"get\"><button type=\"submit\">Tempreture</button></form></td></tr>"
-        "<tr><td><form action=\"/setrtc\" method=\"get\"><button type=\"submit\">Clock</button></form></td></tr>"
+        "<tr><td><form action=\"/settemp\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Tempreture</button></form></td></tr>"
+        "<tr><td><form action=\"/setrtc\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Clock</button></form></td></tr>"
         "</table>"
-        "<h2 style=\"text-align:center;\">Temperature Settings</h2>"
+
+        "<h2 style=\"text-align:center;\">Switching time Settings</h2>"
+
+        "<table align=\"center\">"
+        "<tr>"
+        "<th colspan=\"2\">Current setting</th>"
+        "</tr>"
+        "<tr>"
+        "<td class=\"label\">Switch ON:</td>"
+        "<td class=\"data\">\"%d\"</td>"
+        "</tr>"
+        "<tr>"
+        "<td class=\"label\">Switch OFF:</td>"
+        "<td class=\"data\">\"%d\"</td>"
+        "</tr>"
+        "</table>"
 
         "<form action=\"/update_schdlr\" method=\"post\">"
         "<table align=\"center\">"
@@ -345,7 +324,8 @@ static esp_err_t send_schdlr_time_page(httpd_req_t* req) {
         "</form>"
 
         "</body>"
-        "</html>");
+        "</html>",
+        onHour, offHour);
 
     if (len < 0 || len >= sizeof(html_response)) {
         return ESP_ERR_INVALID_SIZE;
@@ -377,12 +357,13 @@ static esp_err_t sendSuccessPage(httpd_req_t* req) {
                  "th {background-color: #333;}"
                  ".nav-table {position: absolute; top: 0; left: 0; width: 20%%;}"
                  ".nav-table td {padding: 4px; text-align: center;}"
+                 ".nav-button {width: 150px; height: 50px;}"
                  "</style>"
                  "</head>"
 
                  "<body>"
                  "<table class=\"nav-table\">"
-                 "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\">Main Page</button></form></td></tr>"
+                 "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Main Page</button></form></td></tr>"
                  "</table>"
                  "<h2 style=\"text-align:center;\">Updated succesfully</h2>"
 
@@ -399,42 +380,43 @@ static esp_err_t sendSuccessPage(httpd_req_t* req) {
     return httpd_resp_send(req, html_response, len);
 }
 
-// Function to extract data from the buffer
-// if field wasn't filled, func return -1
-static inline int8_t extract_data(const char* field_name, char* buf, int received) {
-    char output[16];
-    char* start = strstr(buf, field_name);
-    if (start) {
-        start += strlen(field_name);    // Move start pointer to the value
-        char* end = strstr(start, "&"); // Find the end of the value
-        if (end == NULL) {
-            end = buf + received; // If there's no other parameter, end is at the end of the data
-        }
-        int len = MIN(end - start, sizeof(output) - 1);
-        if (len == 0) {
-            return -1;
-        }
-        // printf("len:%d", len);
-        strncpy(output, start, len);
-        output[len] = '\0'; // Null terminate the copied value
-        return atoi(output);
-    }
-    return -1;
-}
-
-//Handler for updating light time
+// Handler for updating light time
 static esp_err_t update_schdlr_post_handle(httpd_req_t* req) {
-    char buf[256];
+    char Buf[RESPONSE_BUF_SIZE];
     int ret, received = 0;
-    // char maxTemp[32] = {0}, minTemp[32] = {0}, lightOn[32] = {0}, lightOff[32] = {0};
-    // char number_value[32] = {0}; // Buffer to store the number value
-    int lightOn, lightOff;
-
     int content_len = req->content_len;
 
     while (received < content_len) {
         /* Read the data for the request */
-        if ((ret = httpd_req_recv(req, buf + received, MIN(content_len - received, sizeof(buf) - received))) <= 0) {
+        if ((ret = httpd_req_recv(req, Buf + received, MIN(content_len - received, sizeof(Buf) - received))) <= 0) {
+            if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
+                continue;
+            }
+            return ESP_FAIL;
+        }
+        received += ret;
+    }
+    // Complete string pattern with "&" and Null
+    Buf[received] = '&';
+    Buf[++received] = '\0';
+
+    // Store new settings in NVS
+    const settEvent event = UPDATE_LIGHT_TIME;
+    sendRawResponse(Buf);
+    SendSettEvent(event);
+
+    return sendSuccessPage(req);
+}
+
+// Handler for updating temperature settings
+static esp_err_t update_temp_post_handle(httpd_req_t* req) {
+    char Buf[RESPONSE_BUF_SIZE];
+    int ret, received = 0;
+    int content_len = req->content_len;
+
+    while (received < content_len) {
+        /* Read the data for the request */
+        if ((ret = httpd_req_recv(req, Buf + received, MIN(content_len - received, sizeof(Buf) - received))) <= 0) {
             if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
                 continue;
             }
@@ -443,38 +425,27 @@ static esp_err_t update_schdlr_post_handle(httpd_req_t* req) {
         received += ret;
     }
 
-    // Null terminate the buffer
-    buf[received] = '\0';
-
-    // Extract values from all fields
-    lightOn = extract_data("lightOn=", buf, received);
-    if (lightOn >= 0) {
-        updateTurnONTime(lightOn);
-    }
-
-    lightOff = extract_data("lightOff=", buf, received);
-    if (lightOff >= 0) {
-        updateTurnOFFTime(lightOff);
-    }
+    // Complete string pattern with "&" and Null
+    Buf[received] = '&';
+    Buf[++received] = '\0';
 
     // Store new settings in NVS
-    settEvent event = STORE;
+    const settEvent event = UPDATE_TEMP;
+    sendRawResponse(Buf);
     SendSettEvent(event);
-    ESP_LOGI(TAG, " Light On: %d, Light Off: %d", lightOn, lightOff);
 
     return sendSuccessPage(req);
 }
 
 static esp_err_t update_clock_post_handle(httpd_req_t* req) {
-    char buf[256];
+    char Buf[RESPONSE_BUF_SIZE];
     int ret, received = 0;
-    int unixtime;
 
     int content_len = req->content_len;
 
     while (received < content_len) {
         /* Read the data for the request */
-        if ((ret = httpd_req_recv(req, buf + received, MIN(content_len - received, sizeof(buf) - received))) <= 0) {
+        if ((ret = httpd_req_recv(req, Buf + received, MIN(content_len - received, sizeof(Buf) - received))) <= 0) {
             if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
                 continue;
             }
@@ -484,27 +455,18 @@ static esp_err_t update_clock_post_handle(httpd_req_t* req) {
     }
 
     // Null terminate the buffer
-    buf[received] = '\0';
-
-    // Extract values from all fields
-    unixtime = extract_data("unix=", buf, received);
-    if (unixtime >= 0) {
-        // updateTurnONTime(unixtime);
-    }
-
+    Buf[received] = '&';
+    Buf[++received] = '\0';
 
     // Store new settings in NVS
-    // settEvent event = STORE;
-    // SendSettEvent(event);
-    ESP_LOGI(TAG, " unixtime : %d", unixtime);
+    const settEvent event = UPDATE_RTC;
+    sendRawResponse(Buf);
+    SendSettEvent(event);
 
     return sendSuccessPage(req);
 }
-
+/*_________________MAIN_PAGE________________*/
 static const httpd_uri_t main = {.uri = "/", .method = HTTP_GET, .handler = send_temp_humidity_page, .user_ctx = NULL};
-
-// static const httpd_uri_t settings_uri = {
-//     .uri = "/settings", .method = HTTP_GET, .handler = send_settings_page, .user_ctx = NULL};
 
 /*_________________SETTINGS_PAGES________________*/
 static const httpd_uri_t sett_rtc_uri = {
@@ -514,18 +476,17 @@ static const httpd_uri_t sett_temp_uri = {
     .uri = "/settemp", .method = HTTP_GET, .handler = send_temperature_settings_page, .user_ctx = NULL};
 
 static const httpd_uri_t sett_schdlr_time_uri = {
-    .uri = "/settime", .method = HTTP_GET, .handler = send_schdlr_time_page, .user_ctx = NULL};
+    .uri = "/settime", .method = HTTP_GET, .handler = send_schdlr_time_sett_page, .user_ctx = NULL};
 
 /*_________________UPDATE_HANDLERS_PAGES________________*/
 static const httpd_uri_t update_clock_uri = {
     .uri = "/update_clock", .method = HTTP_POST, .handler = update_clock_post_handle, .user_ctx = NULL};
 
-// static const httpd_uri_t update = {
-//     .uri = "/update_temp", .method = HTTP_POST, .handler = sdfsdfsdf, .user_ctx = NULL};
+static const httpd_uri_t update_temp_uri = {
+    .uri = "/update_temp", .method = HTTP_POST, .handler = update_temp_post_handle, .user_ctx = NULL};
 
 static const httpd_uri_t update_schdlr_uri = {
     .uri = "/update_schdlr", .method = HTTP_POST, .handler = update_schdlr_post_handle, .user_ctx = NULL};
-
 
 static httpd_handle_t start_webserver(void) {
     httpd_handle_t server = NULL;
@@ -548,8 +509,10 @@ static httpd_handle_t start_webserver(void) {
         httpd_register_uri_handler(server, &sett_rtc_uri);
         httpd_register_uri_handler(server, &sett_temp_uri);
         httpd_register_uri_handler(server, &sett_schdlr_time_uri);
+
         httpd_register_uri_handler(server, &update_clock_uri);
         httpd_register_uri_handler(server, &update_schdlr_uri);
+        httpd_register_uri_handler(server, &update_temp_uri);
         httpd_register_err_handler(server, HTTPD_404_NOT_FOUND, http_404_error_handler);
         return server;
     }
@@ -681,9 +644,9 @@ void ServerTask(void* pvParameters) {
 // }
 
 // static esp_err_t main_template(char* page_code, uint32_t page_size) {
-//     char buf[1024];
+//     char Buf[1024];
 
-//     int len = snprintf(buf, sizeof(buf), page_code);
+//     int len = snprintf(Buf, sizeof(Buf), page_code);
 
 //     if (len < 0 || len >= page_size) {
 //         // Handle error: snprintf failed or buffer size was not enough

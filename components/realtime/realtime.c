@@ -4,7 +4,6 @@
 #include <ds3231.h>
 #include <string.h>
 #include <sys/time.h>
-#include <time.h>
 
 #include "realtime.h"
 
@@ -84,6 +83,22 @@ esp_err_t timeInit() {
     return ESP_OK;
 }
 
+void update_rtc(struct tm* time) {
+    struct timeval tv;
+    if (xSemaphoreTake(timeMutex, portMAX_DELAY)) {
+        if (set_time_ds3231(time) != ESP_OK) {
+            ESP_LOGE(TAG, "Can't set time in ds3231");
+        }
+        // translate tm in Unix epoch
+        tv.tv_sec = mktime(time);
+        tv.tv_usec = 0;
+
+        // ESP RTC time updates
+        settimeofday(&tv, NULL);
+        xSemaphoreGive(timeMutex);
+    }
+}
+
 uint8_t hoursNow() {
 
     time_t timeNow;
@@ -109,25 +124,13 @@ int32_t UnixTime() {
         if (timeNow > INT32_MAX || timeNow < INT32_MIN) {
             ESP_LOGE(TAG, "ERROR: time_t > INT32_MAX\n");
         } else {
-            int32_t safe_now = (int32_t)timeNow;
+            safe_now = (int32_t)timeNow;
         }
 
         xSemaphoreGive(timeMutex);
     }
     return safe_now;
 }
-
-// void stringDateTime() {
-
-//     time_t now;
-//     char strftime_buf[64];
-//     struct tm timeinfo;
-
-//     time(&now);
-//     localtime_r(&now, &timeinfo);
-//     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-//     ESP_LOGI(TAG, "The current date/time is: %s", strftime_buf);
-// }
 
 char* getStrDateTime() {
     time_t now;

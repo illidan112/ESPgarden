@@ -7,6 +7,8 @@
 #include "freertos/timers.h"
 #include "nvs_flash.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "realtime.h"
 
@@ -19,10 +21,15 @@ SemaphoreHandle_t airTempMutex;
 
 TaskHandle_t SettHandle;
 static QueueHandle_t qSettEvent = NULL;
-static TimerHandle_t tUnixSaver = NULL;
 static const uint8_t eventQueueLen = 3;
+static char globalBuf[RESPONSE_BUF_SIZE];
 
-void SendSettEvent(const settEvent event) { xQueueSend(qSettEvent, &event, 0); }
+
+void SendSettEvent(const settEvent event) { xQueueSend(qSettEvent, &event, 0U); }
+
+void sendRawResponse(char* buf) {
+    strcpy(globalBuf, buf);
+}
 
 static esp_err_t getAllSettgs() {
     nvs_handle_t my_handle;
@@ -73,12 +80,12 @@ void initializeSettings() {
     if (getAllSettgs() == ESP_ERR_NVS_NOT_FOUND) {
         ESP_LOGW(TAG, "First init, get default settings");
         // Set default values
-        settings.lightTime.turnOnHour = 1;
+        settings.lightTime.turnOnHour = 6;
         settings.lightTime.turnOnMinute = 0;
-        settings.lightTime.turnOffHour = 21;
+        settings.lightTime.turnOffHour = 0;
         settings.lightTime.turnOffMinute = 0;
-        settings.airTemp.MaxTemp = 26;
-        settings.airTemp.MinTemp = 0;
+        settings.airTemp.MaxTemp = 25;
+        settings.airTemp.MinTemp = 18;
     } else {
         ESP_LOGW(TAG, "Got settings from NVS");
         ESP_LOGI(TAG, "turnOnHour:%d, turnOffHour:%d, MaxTemp:%d", settings.lightTime.turnOnHour,
@@ -146,37 +153,6 @@ void getAirTemp(uint8_t* maxTemp, uint8_t* minTemp) {
     }
 }
 
-void UnixSave_Callback() {
-    settEvent event = STORE;
-    SendSettEvent(event);
-}
-
-static void storeDS3231Time() {
-    nvs_handle_t my_handle;
-    esp_err_t err;
-    err = nvs_open("storage", NVS_READWRITE, &my_handle); // Opening Non-Volatile Storage (NVS)
-    if (err == ESP_OK) {
-        int32_t unixTime = UnixTime();
-
-        if (nvs_set_i32(my_handle, "unix", unixTime) != ESP_OK) { // Write
-            ESP_LOGE(TAG, "NVS write unix time ERROR.");
-        }
-
-        // Commit written value.
-        // After setting any values, nvs_commit() must be called to ensure changes are written
-        // to flash storage. Implementations may write to storage at other times,
-        // but this is not guaranteed
-        if (nvs_commit(my_handle) != ESP_OK) {
-            ESP_LOGE(TAG, "NVS commit unix time ERROR.");
-        }
-
-        nvs_close(my_handle); // Closing NVS
-
-    } else {
-        ESP_LOGE(TAG, "NVS open ERROR.");
-    }
-}
-
 static void storeAllSettgs() {
     nvs_handle_t my_handle;
     esp_err_t err;
@@ -216,16 +192,105 @@ static void storeAllSettgs() {
     }
 }
 
+// example of "data": "lightOff"
+int extractValue(char* data, char* tag) {
+    char* startPos = strstr(data, tag);
+    if (startPos == NULL) {
+        ESP_LOGE(TAG, "Tag '%s' not found.", tag);
+        return -2;
+    }
+
+    startPos += strlen(tag) + 1; // Moving pointer past the tag and the equal sign.
+    int value = 0;
+
+    // Находим позицию символа '&' начиная с текущей позиции startPos
+    char* endPos = strchr(startPos, '&');
+    if (endPos == NULL) {
+        ESP_LOGE(TAG, "Invalid format.");
+        return -2; // Неверный формат строки
+    }
+
+    // Создаем временную строку для хранения числа
+    int len = endPos - startPos;
+    if (len <= 0) {
+        ESP_LOGI(TAG, "Tag is empty. Skipping");
+        return -1;
+    }
+    char temp[16];
+
+    strncpy(temp, startPos, len);
+    temp[len] = '\0'; // Добавляем нулевой символ в конец строки
+
+    // Конвертируем строку в число
+    value = atoi(temp);
+    if (value == 0 && temp[0] != '0') {
+        ESP_LOGE(TAG, "Can't convert string to value.");
+        return -2;
+    }
+
+    return value;
+}
+
 static void HandleEvent(const settEvent event) {
+    char response[RESPONSE_BUF_SIZE];
+    strcpy(response, globalBuf);
+    memset(globalBuf, 0, RESPONSE_BUF_SIZE);
+
     switch (event) {
-    case STORE:
-        ESP_LOGI(TAG, "Store all settings");
-        // storeTime();
+    case UPDATE_LIGHT_TIME:
+        ESP_LOGI(TAG, "LIGHT_TIME update start");
+        int bufLight = extractValue(response, "lightOff");
+        if (bufLight >= 0) {
+            updateTurnOFFTime(bufLight);
+            ESP_LOGI(TAG, "lightOFF updated");
+        }
+
+        bufLight = extractValue(response, "lightOn");
+        if (bufLight >= 0) {
+            updateTurnONTime(bufLight);
+            ESP_LOGI(TAG, "lightON updated");
+        }
+
         storeAllSettgs();
-
+        ESP_LOGI(TAG, "LIGHT_TIME update completed");
         break;
-    case UPDATE_RTC:
 
+    case UPDATE_TEMP:
+        ESP_LOGI(TAG, "TEMPrature update start");
+        // MINIMUM TEMPERATURE
+        int bufTemp = extractValue(response, "mintmp");
+        if (bufTemp >= 0) {
+            updateMinAirTemp(bufTemp);
+        }
+        // MAXIMUM TEMPERATURE
+        bufTemp = extractValue(response, "maxtmp");
+        if (bufTemp >= 0) {
+            updateMaxAirTemp(bufTemp);
+        }
+
+        storeAllSettgs();
+        ESP_LOGI(TAG, "TEMPrature update completed");
+        break;
+
+    case UPDATE_RTC:
+        // char response_test[] = "time=05%3A00&date=2024-03-24&";
+        struct tm tm_info;
+        memset(&tm_info, 0, sizeof(struct tm));
+
+        // Convert "%3A" in ":"
+        char* encoded_colon = strstr(response, "%3A");
+        if (encoded_colon) {
+            *encoded_colon = ':'; // change % in :
+            memmove(encoded_colon + 1, encoded_colon + 3,
+                    strlen(encoded_colon) - 2); // Move the remaining part
+        }
+
+        // Template for strptime
+        char* format = "time=%H:%M&date=%Y-%m-%d&";
+
+        strptime(response, format, &tm_info);
+
+        update_rtc(&tm_info);
         break;
     }
 }
@@ -235,13 +300,10 @@ void SettingsTask(void* pvParameters) {
 
     qSettEvent = xQueueCreate(eventQueueLen, sizeof(settEvent));
 
-    tUnixSaver = xTimerCreate("test Tmr", pdMS_TO_TICKS(1000), pdTRUE, 0, UnixSave_Callback);
-    // xTimerStart(tUnixSaver, 0);
-
     while (1) {
-        settEvent event;
-        if (xQueueReceive(qSettEvent, &event, portMAX_DELAY)) {
-            HandleEvent(event);
+        settEvent eveData;
+        if (xQueueReceive(qSettEvent, &eveData, portMAX_DELAY)) {
+            HandleEvent(eveData);
         }
     }
 }

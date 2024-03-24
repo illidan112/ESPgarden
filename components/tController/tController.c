@@ -38,15 +38,32 @@ static void LightCheck(uint8_t currentHour) {
 
     getLightTime(&onHour, &offHour);
 
-    if (isLightON) {
-        if (currentHour >= offHour) {
-            lightingTurnOFF();
-            isLightON = false;
+    // Logic to determine whether to turn the light on or off
+    if (onHour <= offHour) {
+        //  Scenario when both turning on and off happen within the same day
+        if (isLightON) {
+            if (currentHour >= offHour || currentHour < onHour) {
+                lightingTurnOFF();
+                isLightON = false;
+            }
+        } else {
+            if (currentHour >= onHour && currentHour < offHour) {
+                lightingTurnON();
+                isLightON = true;
+            }
         }
     } else {
-        if (currentHour >= onHour) {
-            lightingTurnON();
-            isLightON = true;
+        // Scenario when turning on or off happens across midnight
+        if (isLightON) {
+            if (currentHour >= offHour && currentHour < onHour) {
+                lightingTurnOFF();
+                isLightON = false;
+            }
+        } else {
+            if (currentHour >= onHour || currentHour < offHour) {
+                lightingTurnON();
+                isLightON = true;
+            }
         }
     }
 }
@@ -77,14 +94,15 @@ static void HandleEvent(const controllerEvent event) {
     case SCAN:
         uint8_t currentTemp;
         uint8_t currentHumidity;
-        int currentHour = 0;
+        uint8_t currentHour = hoursNow();
 
-        if (getAirData(&currentTemp, &currentHumidity) != ESP_OK) {
-            ESP_LOGE(TAG, "cant get air data");
+        if (getAirData(&currentTemp, &currentHumidity) == ESP_OK) {
+            BoxFanCheck(currentTemp);
+        } else {
+            ESP_LOGE(TAG, "Cant get air data");
         }
 
         LightCheck(currentHour);
-        BoxFanCheck(currentTemp);
 
         char* dataTimeStr = getStrDateTime();
         ESP_LOGI(TAG, "%s: Temp %d°C, Humd %d%%", dataTimeStr, currentTemp, currentHumidity);

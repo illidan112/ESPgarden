@@ -4,14 +4,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <esp_err.h>
-
-// void stringDateTime();
-
-char* getStrDateTime();
+#include <time.h>
 
 esp_err_t timeInit();
+char* getStrDateTime();
 
-int32_t UnixTime();
+/**
+ * @brief Updates the time value on both the DS3231 and the RTC of the ESP32.
+ *
+ * @param time A pointer to the tm structure with the current time.
+ */
+void update_rtc(struct tm* time);
 
 /**
  * @brief returns the current hour of day.

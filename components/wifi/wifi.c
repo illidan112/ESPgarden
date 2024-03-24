@@ -23,8 +23,10 @@
     Change the below entries to strings with
     the config you want - ie #define  ESP_WIFI_SSID "mywifissid"
 */
-#define ESP_WIFI_SSID "TrueWIFI"
-#define ESP_WIFI_PASS "qwerty4321"
+// #define ESP_WIFI_SSID "TrueWIFI"
+// #define ESP_WIFI_PASS "qwerty4321"
+#define ESP_WIFI_SSID "iPhone (Ilya)"
+#define ESP_WIFI_PASS "Abobaaboba112"
 #define ESP_MAXIMUM_RETRY 5
 
 /* FreeRTOS event group to signal when we are connected*/
@@ -62,7 +64,7 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
         }
         // ESP_LOGI(TAG,"connect to the AP fail");
     } else if (event_base == IP_EVENT) {
-        printf("ID event: %d\n", (int)event_id);
+        // printf("ID event: %d\n", (int)event_id);
         switch (event_id) {
         case IP_EVENT_STA_GOT_IP: {
             ip_event_got_ip_t* event = (ip_event_got_ip_t*)event_data;

@@ -1,13 +1,14 @@
 #ifndef _SETTINGS_H_
 #define _SETTINGS_H_
+#define RESPONSE_BUF_SIZE 64
 
 #include <stdint.h>
 
 // Available events in priority order
 typedef enum {
-    STORE = 0,
+    UPDATE_LIGHT_TIME = 0,
+    UPDATE_TEMP,
     UPDATE_RTC,
-
 } settEvent;
 
 typedef struct {
@@ -35,9 +36,9 @@ extern SettingsData settings;
 
 void initializeSettings();
 
+void sendRawResponse(char* buf);
 void SettingsTask(void* pvParameters);
 void SendSettEvent(const settEvent event);
-
 
 /**
  * @brief Update the scheduled times for turning the light on and off.
@@ -59,7 +60,6 @@ void updateTurnONTime(uint8_t ONhour);
  * @param min The minimum temperature threshold in Celsius. Range: valid temp range or -1 for no change.
  */
 void updateMinAirTemp(int min);
-
 void updateMaxAirTemp(int max);
 
 /**

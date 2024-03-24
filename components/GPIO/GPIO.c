@@ -2,15 +2,18 @@
 #include "esp_log.h"
 #include "httpServer.h"
 #include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 #define ESP_INTR_FLAG_DEFAULT 0
 
 #define LIGHTING1   GPIO_NUM_32
 #define LIGHTING2   GPIO_NUM_33
+#define LIGHTING3   GPIO_NUM_25
+#define LIGHTING4   GPIO_NUM_26
 #define FAN1        GPIO_NUM_14
 #define BUTTON1     GPIO_NUM_23
 
-static uint8_t LighingState = 0;
+static bool LighingState = false;
 const static char* TAG = "GPIO";
 
 static void IRAM_ATTR gpio_isr_handler(void* arg)
@@ -22,9 +25,14 @@ static void IRAM_ATTR gpio_isr_handler(void* arg)
 void lightingInit() {
 
     gpio_reset_pin(LIGHTING1);
-    /* Set the GPIO as a push/pull output */
+    gpio_reset_pin(LIGHTING2);
+    gpio_reset_pin(LIGHTING3);
+    gpio_reset_pin(LIGHTING4);
     gpio_set_direction(LIGHTING1, GPIO_MODE_OUTPUT);
-    LighingState = gpio_get_level(LIGHTING1);
+    gpio_set_direction(LIGHTING2, GPIO_MODE_OUTPUT);
+    gpio_set_direction(LIGHTING3, GPIO_MODE_OUTPUT);
+    gpio_set_direction(LIGHTING4, GPIO_MODE_OUTPUT);
+    // LighingState = gpio_get_level(LIGHTING1);
 
     //BUTTON FOR WIFI
     gpio_reset_pin(BUTTON1);
@@ -41,16 +49,24 @@ void lightingInit() {
 void lightingTurnON() {
     if (!(LighingState)) {
         gpio_set_level(LIGHTING1, 1);
-        LighingState = 1;
-        ESP_LOGI(TAG, "ON lighting");
+        gpio_set_level(LIGHTING2, 1);
+        vTaskDelay(pdMS_TO_TICKS(500));
+        gpio_set_level(LIGHTING3, 1);
+        gpio_set_level(LIGHTING4, 1);
+        LighingState = true;
+        ESP_LOGI(TAG, "ON LIGHT");
     }
 }
 
 void lightingTurnOFF() {
     if (LighingState) {
         gpio_set_level(LIGHTING1, 0);
-        LighingState = 0;
-        ESP_LOGI(TAG, "OFF lighting");
+        gpio_set_level(LIGHTING2, 0);
+        vTaskDelay(pdMS_TO_TICKS(500));
+        gpio_set_level(LIGHTING3, 0);
+        gpio_set_level(LIGHTING4, 0);
+        LighingState = false;
+        ESP_LOGI(TAG, "OFF LIGHT");
     }
 }
 
