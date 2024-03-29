@@ -16,10 +16,13 @@
 static bool LighingState = false;
 const static char* TAG = "GPIO";
 
-static void IRAM_ATTR gpio_isr_handler(void* arg)
-{
-    serverEvent event = START;
-    SendServerEvent(event);
+static void IRAM_ATTR gpio_isr_handler(void* arg) {
+    if (!gpio_get_level(BUTTON1)) {
+        gpio_intr_disable(BUTTON1);
+        serverEvent event = START;
+        SendServerEventISR(event);
+        gpio_intr_enable(BUTTON1);
+    }
 }
 
 void lightingInit() {
@@ -34,16 +37,15 @@ void lightingInit() {
     gpio_set_direction(LIGHTING4, GPIO_MODE_OUTPUT);
     // LighingState = gpio_get_level(LIGHTING1);
 
-    //BUTTON FOR WIFI
+    // BUTTON FOR WIFI
     gpio_reset_pin(BUTTON1);
     gpio_set_intr_type(BUTTON1, GPIO_INTR_POSEDGE);
     gpio_set_direction(BUTTON1, GPIO_MODE_INPUT);
     gpio_set_pull_mode(BUTTON1, GPIO_PULLUP_ONLY);
-        //install gpio isr service
+    // install gpio isr service
     gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
-    //hook isr handler for specific gpio pin
-    gpio_isr_handler_add(BUTTON1, gpio_isr_handler, (void*) BUTTON1);
-
+    // hook isr handler for specific gpio pin
+    gpio_isr_handler_add(BUTTON1, gpio_isr_handler, (void*)BUTTON1);
 }
 
 void lightingTurnON() {

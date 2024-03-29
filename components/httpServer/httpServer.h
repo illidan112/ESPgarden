@@ -13,6 +13,7 @@ typedef enum {
 } serverEvent;
 
 void SendServerEvent(const serverEvent event);
+void SendServerEventISR(const serverEvent event);
 
 void ServerTask(void* pvParameters);
 

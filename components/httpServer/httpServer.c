@@ -42,6 +42,7 @@ static QueueHandle_t qServer = NULL;
 static bool httpConnected = false;
 
 void SendServerEvent(const serverEvent event) { xQueueSend(qServer, &event, 0); }
+void SendServerEventISR(const serverEvent event) { xQueueSendFromISR(qServer, &event, 0); }
 
 void stopServer_callback() {
     serverEvent event = STOP;
@@ -78,11 +79,14 @@ static esp_err_t send_temp_humidity_page(httpd_req_t* req) {
 
         "<body>"
         "<table class=\"nav-table\">"
-        "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Main Page</button></form></td></tr>"
+        "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Main "
+        "Page</button></form></td></tr>"
         "<tr><td><form action=\"/settime\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Switching "
         "Time</button></form></td></tr>"
-        "<tr><td><form action=\"/settemp\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Tempreture</button></form></td></tr>"
-        "<tr><td><form action=\"/setrtc\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Clock</button></form></td></tr>"
+        "<tr><td><form action=\"/settemp\" method=\"get\"><button type=\"submit\" "
+        "class=\"nav-button\">Tempreture</button></form></td></tr>"
+        "<tr><td><form action=\"/setrtc\" method=\"get\"><button type=\"submit\" "
+        "class=\"nav-button\">Clock</button></form></td></tr>"
         "</table>"
 
         "<h2 style=\"text-align:center;\">GARDEN</h2>"
@@ -131,11 +135,14 @@ static esp_err_t send_rtc_settings_page(httpd_req_t* req) {
         "<body>"
 
         "<table class=\"nav-table\">"
-        "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Main Page</button></form></td></tr>"
+        "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Main "
+        "Page</button></form></td></tr>"
         "<tr><td><form action=\"/settime\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Switching "
         "Time</button></form></td></tr>"
-        "<tr><td><form action=\"/settemp\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Tempreture</button></form></td></tr>"
-        "<tr><td><form action=\"/setrtc\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Clock</button></form></td></tr>"
+        "<tr><td><form action=\"/settemp\" method=\"get\"><button type=\"submit\" "
+        "class=\"nav-button\">Tempreture</button></form></td></tr>"
+        "<tr><td><form action=\"/setrtc\" method=\"get\"><button type=\"submit\" "
+        "class=\"nav-button\">Clock</button></form></td></tr>"
         "</table>"
 
         "<h2 style=\"text-align:center;\">Clock Settings</h2>"
@@ -199,11 +206,14 @@ static esp_err_t send_temperature_settings_page(httpd_req_t* req) {
         "<body>"
 
         "<table class=\"nav-table\">"
-        "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Main Page</button></form></td></tr>"
+        "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Main "
+        "Page</button></form></td></tr>"
         "<tr><td><form action=\"/settime\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Switching "
         "Time</button></form></td></tr>"
-        "<tr><td><form action=\"/settemp\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Tempreture</button></form></td></tr>"
-        "<tr><td><form action=\"/setrtc\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Clock</button></form></td></tr>"
+        "<tr><td><form action=\"/settemp\" method=\"get\"><button type=\"submit\" "
+        "class=\"nav-button\">Tempreture</button></form></td></tr>"
+        "<tr><td><form action=\"/setrtc\" method=\"get\"><button type=\"submit\" "
+        "class=\"nav-button\">Clock</button></form></td></tr>"
         "</table>"
 
         "<h2 style=\"text-align:center;\">Temperature Settings</h2>"
@@ -282,11 +292,14 @@ static esp_err_t send_schdlr_time_sett_page(httpd_req_t* req) {
         "<body>"
 
         "<table class=\"nav-table\">"
-        "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Main Page</button></form></td></tr>"
+        "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Main "
+        "Page</button></form></td></tr>"
         "<tr><td><form action=\"/settime\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Switching "
         "Time</button></form></td></tr>"
-        "<tr><td><form action=\"/settemp\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Tempreture</button></form></td></tr>"
-        "<tr><td><form action=\"/setrtc\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Clock</button></form></td></tr>"
+        "<tr><td><form action=\"/settemp\" method=\"get\"><button type=\"submit\" "
+        "class=\"nav-button\">Tempreture</button></form></td></tr>"
+        "<tr><td><form action=\"/setrtc\" method=\"get\"><button type=\"submit\" "
+        "class=\"nav-button\">Clock</button></form></td></tr>"
         "</table>"
 
         "<h2 style=\"text-align:center;\">Switching time Settings</h2>"
@@ -344,31 +357,31 @@ static esp_err_t sendSuccessPage(httpd_req_t* req) {
 
     char html_response[1024];
     // Format the HTML response
-    int len =
-        snprintf(html_response, sizeof(html_response),
-                 "<!DOCTYPE html>"
-                 "<html>"
-                 "<head>"
-                 "<title>GARDEN</title>"
-                 "<style>"
-                 "body { background-color: black; color: white; }"
-                 // "form {text-align: center; margin-top: 20px;}"
-                 "th, td {border: 1px solid white; text-align: center; padding: 8px;}"
-                 "th {background-color: #333;}"
-                 ".nav-table {position: absolute; top: 0; left: 0; width: 20%%;}"
-                 ".nav-table td {padding: 4px; text-align: center;}"
-                 ".nav-button {width: 150px; height: 50px;}"
-                 "</style>"
-                 "</head>"
+    int len = snprintf(html_response, sizeof(html_response),
+                       "<!DOCTYPE html>"
+                       "<html>"
+                       "<head>"
+                       "<title>GARDEN</title>"
+                       "<style>"
+                       "body { background-color: black; color: white; }"
+                       // "form {text-align: center; margin-top: 20px;}"
+                       "th, td {border: 1px solid white; text-align: center; padding: 8px;}"
+                       "th {background-color: #333;}"
+                       ".nav-table {position: absolute; top: 0; left: 0; width: 20%%;}"
+                       ".nav-table td {padding: 4px; text-align: center;}"
+                       ".nav-button {width: 150px; height: 50px;}"
+                       "</style>"
+                       "</head>"
 
-                 "<body>"
-                 "<table class=\"nav-table\">"
-                 "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Main Page</button></form></td></tr>"
-                 "</table>"
-                 "<h2 style=\"text-align:center;\">Updated succesfully</h2>"
+                       "<body>"
+                       "<table class=\"nav-table\">"
+                       "<tr><td><form action=\"/\" method=\"get\"><button type=\"submit\" class=\"nav-button\">Main "
+                       "Page</button></form></td></tr>"
+                       "</table>"
+                       "<h2 style=\"text-align:center;\">Updated succesfully</h2>"
 
-                 "</body>"
-                 "</html>");
+                       "</body>"
+                       "</html>");
 
     if (len < 0 || len >= sizeof(html_response)) {
         // Handle error: snprintf failed or buffer size was not enough
@@ -525,19 +538,7 @@ static esp_err_t stop_webserver(httpd_handle_t server) {
     if (server) {
         return httpd_stop(server);
     }
-    return ESP_OK;
-}
-
-static void disconnect_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-    httpd_handle_t* server = (httpd_handle_t*)arg;
-    if (*server) {
-        ESP_LOGI(TAG, "Stopping httpserver");
-        if (stop_webserver(*server) != ESP_OK) {
-            ESP_LOGE(TAG, "Failed to stop http server");
-        }
-        // *server = NULL;
-        http_server = NULL;
-    }
+    return ESP_FAIL;
 }
 
 static void connect_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
@@ -545,6 +546,20 @@ static void connect_handler(void* arg, esp_event_base_t event_base, int32_t even
     if (*server == NULL) {
         ESP_LOGI(TAG, "Starting webserver");
         *server = start_webserver();
+    }
+}
+
+static void disconnect_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+    httpd_handle_t* server = (httpd_handle_t*)arg;
+    if (*server) {
+        ESP_LOGI(TAG, "Disconnect_handler running...");
+        esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler);
+        esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler);
+        if (stop_webserver(*server) != ESP_OK) {
+            ESP_LOGE(TAG, "server descriptor is NULL");
+        }
+        // *server = NULL;
+        http_server = NULL;
     }
 }
 
@@ -579,11 +594,14 @@ static void HandleEvent(const serverEvent event) {
             ESP_LOGI(TAG, "Server START");
             if (wifi_sta_init() != ESP_OK) {
                 ESP_LOGE(TAG, "WIFI start ERROR");
+                vTaskDelay(pdMS_TO_TICKS(500)); //Delay to avoid multiple interrupt TODO: fixed it in GPIO component
+                stop_webserver(http_server);
                 wifi_sta_stop();
                 httpConnected = false;
             } else {
                 if (http_server_start() != ESP_OK) {
                     ESP_LOGE(TAG, "HTTP serv start ERROR");
+                    vTaskDelay(pdMS_TO_TICKS(500)); //Delay to avoid multiple interrupt TODO: fixed it in GPIO component
                     httpConnected = false;
                 }
             }
@@ -592,9 +610,9 @@ static void HandleEvent(const serverEvent event) {
 
     case STOP:
         if (httpConnected) {
-            ESP_LOGI(TAG, "Server STOP");
-            if (stop_webserver(http_server) || wifi_sta_stop() != ESP_OK) {
-                ESP_LOGE(TAG, "WIFI stop ERROR");
+            ESP_LOGI(TAG, "Stoping server...");
+            if (stop_webserver(http_server) && wifi_sta_stop() != ESP_OK) { 
+                ESP_LOGE(TAG, "Error during stoping");
             } else {
                 httpConnected = false;
             }
