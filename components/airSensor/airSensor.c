@@ -12,8 +12,8 @@
 SemaphoreHandle_t sensorMutex;
 bmp280_t bme280Desc;
 
-static uint8_t lastTemp = 0;
-static uint8_t lastHumd = 0;
+static float lastTemp = 0;
+static float lastHumd = 0;
 
 static const char* TAG = "AIR";
 
@@ -36,11 +36,14 @@ esp_err_t airSensorInit() {
     ESP_LOGI(TAG, "Found %s\n", bme280p ? "BME280" : "BMP280");
 
     sensorMutex = xSemaphoreCreateMutex();
+    if (sensorMutex == NULL) {
+        ESP_LOGE(TAG, "Error during creating sensorMutex");
+    }
 
     return ESP_OK;
 }
 
-esp_err_t getAirData(uint8_t* temp, uint8_t* hum) {
+esp_err_t getAirData(float* temp, float* hum) {
     float pressure, temperature, humidity;
     esp_err_t status;
 
@@ -53,12 +56,52 @@ esp_err_t getAirData(uint8_t* temp, uint8_t* hum) {
             return ESP_FAIL;
         }
 
-        lastTemp = *temp = (uint8_t)temperature;
-        lastHumd = *hum = (uint8_t)humidity;
+        lastTemp = *temp = temperature;
+        lastHumd = *hum = humidity;
     }
     return ESP_OK;
 }
 
-uint8_t getHumidity() { return lastHumd; }
+uint8_t getHumidity() {
+    uint8_t bufHum = 0;
+    if (xSemaphoreTake(sensorMutex, portMAX_DELAY)) {
+        bufHum = (uint8_t)lastHumd;
+        xSemaphoreGive(sensorMutex);
+    }
+    return bufHum;
+}
 
-uint8_t getTemp() { return lastTemp; }
+uint8_t getTemp() {
+    uint8_t bufTemp = 0;
+    if (xSemaphoreTake(sensorMutex, portMAX_DELAY)) {
+        bufTemp = (uint8_t)lastTemp;
+        xSemaphoreGive(sensorMutex);
+    }
+    return bufTemp;
+}
+
+float getHumidityFl() {
+    float bufHum = 0;
+    // if (xSemaphoreTake(sensorMutex, portMAX_DELAY)) {
+        bufHum = lastHumd;
+        // xSemaphoreGive(sensorMutex);
+    // }
+    return bufHum;
+}
+
+float getTempFl() {
+    float bufTemp = 0;
+    if (xSemaphoreTake(sensorMutex, portMAX_DELAY)) {
+        bufTemp = lastTemp;
+        xSemaphoreGive(sensorMutex);
+    }
+    return bufTemp;
+}
+
+void getTempDouble(uint8_t *intPart, uint8_t *fracPart) {
+    // Get the integer part.
+    *intPart = (int)lastTemp;
+    
+    // Get the fractional part, round to two decimal places and convert to int.
+    *fracPart = (int)((lastTemp - *intPart) * 100);
+}

@@ -15,7 +15,7 @@
 #include "settings.h"
 #include "httpServer.h"
 
-#define STACK_SIZE 4096
+#define STACK_SIZE 1024
 #define HIGH_PRIORITY 1
 #define LOW_PRIORITY 0
 
@@ -44,8 +44,8 @@ void app_main(void) {
 
     initializeSettings();
 
-    xTaskCreate(ControllerTask, "Plant control", STACK_SIZE, NULL, LOW_PRIORITY, NULL);
-    xTaskCreate(ServerTask, "Server Task", STACK_SIZE, NULL, LOW_PRIORITY, NULL);
-    xTaskCreate(SettingsTask, "Settings Task", STACK_SIZE, NULL, HIGH_PRIORITY, NULL);
+    xTaskCreate(ControllerTask, "Plant control", STACK_SIZE * 2, NULL, LOW_PRIORITY, NULL);
+    xTaskCreate(ServerTask, "Server Task", STACK_SIZE * 5, NULL, LOW_PRIORITY, NULL);
+    xTaskCreate(SettingsTask, "Settings Task", STACK_SIZE * 3, NULL, HIGH_PRIORITY, NULL);
     // xTaskCreate(ExecutorTask, "Executor Task", STACK_SIZE, NULL, HIGH_PRIORITY, NULL);
 }

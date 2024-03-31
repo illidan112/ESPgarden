@@ -92,12 +92,12 @@ static void BoxFanCheck(uint8_t currentTemp) {
 static void HandleEvent(const controllerEvent event) {
     switch (event) {
     case SCAN:
-        uint8_t currentTemp;
-        uint8_t currentHumidity;
+        float currentTemp;
+        float currentHumidity;
         uint8_t currentHour = hoursNow();
 
         if (getAirData(&currentTemp, &currentHumidity) == ESP_OK) {
-            BoxFanCheck(currentTemp);
+            BoxFanCheck((uint8_t)currentTemp);
         } else {
             ESP_LOGE(TAG, "Cant get air data");
         }
@@ -105,7 +105,7 @@ static void HandleEvent(const controllerEvent event) {
         LightCheck(currentHour);
 
         char* dataTimeStr = getStrDateTime();
-        ESP_LOGI(TAG, "%s: Temp %d°C, Humd %d%%", dataTimeStr, currentTemp, currentHumidity);
+        ESP_LOGI(TAG, "%s: Temp %.2f°C, Humd %.2f%%", dataTimeStr, currentTemp, currentHumidity);
         break;
     }
 }

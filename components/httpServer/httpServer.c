@@ -52,8 +52,8 @@ void stopServer_callback() {
 bool isWebServerRunning() { return httpConnected; }
 
 static esp_err_t send_temp_humidity_page(httpd_req_t* req) {
-    char html_response[2048]; // Increased size to accommodate additional HTML
-    uint8_t temperature = getTemp();
+    char html_response[2064]; // Increased size to accommodate additional HTML
+    float temperature = getTempFl();
     uint8_t humidity = getHumidity();
     char* dateTimeStr = getStrDateTime(); // Get the date and time string
 
@@ -92,7 +92,7 @@ static esp_err_t send_temp_humidity_page(httpd_req_t* req) {
         "<h2 style=\"text-align:center;\">GARDEN</h2>"
         "<table>"
         "<tr><th colspan=\"2\">%s</th></tr>"
-        "<tr><td>Temperature</td><td>%d C</td></tr>"
+        "<tr><td>Temperature</td><td>%.1f C</td></tr>"
         "<tr><td>Humidity</td><td>%d%%</td></tr>"
         "</table>"
         "</body>"

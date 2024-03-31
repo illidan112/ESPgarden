@@ -15,6 +15,7 @@ typedef enum {
 void SendServerEvent(const serverEvent event);
 void SendServerEventISR(const serverEvent event);
 
+// FreeRTOS task 
 void ServerTask(void* pvParameters);
 
 // Start the HTTP server
