@@ -16,10 +16,8 @@
 #include "httpServer.h"
 
 #define STACK_SIZE 1024
-#define HIGH_PRIORITY 1
-#define LOW_PRIORITY 0
-
-#define BLINK_GPIO GPIO_NUM_32
+#define HIGH_PRIORITY 2
+#define LOW_PRIORITY 1
 
 const static char* TAG = "MAIN";
 

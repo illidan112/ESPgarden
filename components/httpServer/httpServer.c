@@ -23,6 +23,7 @@
 #include "realtime.h"
 #include "settings.h"
 #include "wifi.h"
+#include "mdns.h"
 // #include "../../managed_components/espressif__mdns/include/mdns.h"
 
 #if !CONFIG_IDF_TARGET_LINUX
@@ -31,6 +32,9 @@
 #include <esp_wifi.h>
 // #include "esp_eth.h"
 #endif // !CONFIG_IDF_TARGET_LINUX
+
+#define ESP_MDNS_URI            "garden"
+// #define ESP_MDNS_INSTANCE_NAME  "garden"
 
 static const char* TAG = "HTTP";
 static httpd_handle_t http_server = NULL;
@@ -45,6 +49,24 @@ void setWebServerState(bool flag) { httpServerState = flag; }
 
 void SendServerEvent(const serverEvent event) { xQueueSend(qServer, &event, 0); }
 void SendServerEventISR(const serverEvent event) { xQueueSendFromISR(qServer, &event, 0); }
+
+static esp_err_t start_mdns_service()
+{
+    //initialize mDNS service
+    esp_err_t err = mdns_init();
+    if (err) {
+        ESP_LOGE("MDNS", "MDNS Init failed: %d\n", err);
+        return ESP_FAIL;
+    }
+
+    //set hostname
+    mdns_hostname_set(ESP_MDNS_URI);
+    //set default instance
+    mdns_instance_name_set(ESP_MDNS_URI);
+    ESP_LOGI("MDNS", "mdns hostname set to: %s.local", ESP_MDNS_URI);
+
+    return ESP_OK;
+}
 
 static esp_err_t send_temp_humidity_page(httpd_req_t* req) {
     char html_response[2064]; // Increased size to accommodate additional HTML
@@ -586,6 +608,7 @@ static void HandleEvent(const serverEvent event) {
 void ServerTask(void* pvParameters) {
     (void)pvParameters;
     wifi_sta_init();
+    start_mdns_service();
     http_server_start();
 
     qServer = xQueueCreate(eventQueueLen, sizeof(serverEvent));
