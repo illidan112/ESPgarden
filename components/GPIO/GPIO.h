@@ -12,4 +12,6 @@ void fanTurnON();
 
 void fanTurnOFF();
 
+void EnableButton();
+
 #endif

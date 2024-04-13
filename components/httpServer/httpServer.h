@@ -6,9 +6,7 @@
 
 // Available events in priority order
 typedef enum {
-    START = 0,
-    STOP,
-    CONN_LOST,
+    RECONNECT = 0,
 
 } serverEvent;
 
@@ -20,5 +18,11 @@ void ServerTask(void* pvParameters);
 
 // Start the HTTP server
 esp_err_t http_server_start(void);
+
+// Return state of http server
+bool isWebServerRunning();
+
+// Set state of http server
+void setWebServerState(bool flag);
 
 #endif // HTTP_SERV_H

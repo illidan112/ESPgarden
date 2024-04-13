@@ -1,17 +1,17 @@
 #include "driver/gpio.h"
 #include "esp_log.h"
-#include "httpServer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "httpServer.h"
 
 #define ESP_INTR_FLAG_DEFAULT 0
 
-#define LIGHTING1   GPIO_NUM_32
-#define LIGHTING2   GPIO_NUM_33
-#define LIGHTING3   GPIO_NUM_25
-#define LIGHTING4   GPIO_NUM_26
-#define FAN1        GPIO_NUM_14
-#define BUTTON1     GPIO_NUM_23
+#define LIGHTING1 GPIO_NUM_32
+#define LIGHTING2 GPIO_NUM_33
+#define LIGHTING3 GPIO_NUM_25
+#define LIGHTING4 GPIO_NUM_26
+#define FAN1 GPIO_NUM_14
+#define BUTTON1 GPIO_NUM_23
 
 static bool LighingState = false;
 const static char* TAG = "GPIO";
@@ -19,10 +19,14 @@ const static char* TAG = "GPIO";
 static void IRAM_ATTR gpio_isr_handler(void* arg) {
     if (!gpio_get_level(BUTTON1)) {
         gpio_intr_disable(BUTTON1);
-        serverEvent event = START;
+        serverEvent event = RECONNECT;
         SendServerEventISR(event);
         gpio_intr_enable(BUTTON1);
     }
+}
+
+void EnableButton() {
+    gpio_intr_enable(BUTTON1);
 }
 
 void lightingInit() {

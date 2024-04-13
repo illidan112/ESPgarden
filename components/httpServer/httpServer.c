@@ -34,22 +34,17 @@
 
 static const char* TAG = "HTTP";
 static httpd_handle_t http_server = NULL;
-static TimerHandle_t stopServer = NULL;
 
 static const uint8_t eventQueueLen = 3;
 static QueueHandle_t qServer = NULL;
 
-static bool httpConnected = false;
+static bool httpServerState = false;
+
+bool isWebServerRunning() { return httpServerState; }
+void setWebServerState(bool flag) { httpServerState = flag; }
 
 void SendServerEvent(const serverEvent event) { xQueueSend(qServer, &event, 0); }
 void SendServerEventISR(const serverEvent event) { xQueueSendFromISR(qServer, &event, 0); }
-
-void stopServer_callback() {
-    serverEvent event = STOP;
-    SendServerEvent(event);
-}
-
-bool isWebServerRunning() { return httpConnected; }
 
 static esp_err_t send_temp_humidity_page(httpd_req_t* req) {
     char html_response[2064]; // Increased size to accommodate additional HTML
@@ -535,10 +530,8 @@ static httpd_handle_t start_webserver(void) {
 }
 
 static esp_err_t stop_webserver(httpd_handle_t server) {
-    if (server) {
-        return httpd_stop(server);
-    }
-    return ESP_FAIL;
+    // Stop the httpd server
+    return httpd_stop(server);
 }
 
 static void connect_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
@@ -546,82 +539,45 @@ static void connect_handler(void* arg, esp_event_base_t event_base, int32_t even
     if (*server == NULL) {
         ESP_LOGI(TAG, "Starting webserver");
         *server = start_webserver();
+        if (*server != NULL) {
+            httpServerState = true;
+        }
     }
 }
 
 static void disconnect_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     httpd_handle_t* server = (httpd_handle_t*)arg;
     if (*server) {
-        ESP_LOGI(TAG, "Disconnect_handler running...");
-        esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler);
-        esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler);
-        if (stop_webserver(*server) != ESP_OK) {
-            ESP_LOGE(TAG, "server descriptor is NULL");
+        ESP_LOGI(TAG, "Stopping webserver");
+        httpServerState = false;
+        if (stop_webserver(*server) == ESP_OK) {
+            *server = NULL;
+        } else {
+            ESP_LOGE(TAG, "Failed to stop http server");
         }
-        // *server = NULL;
-        http_server = NULL;
     }
 }
 
 esp_err_t http_server_start(void) {
+    /* Register event handlers to stop the server when Wi-Fi is disconnected,
+     * and re-start it upon connection.
+     */
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &http_server));
+    ESP_ERROR_CHECK(
+        esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &http_server));
 
-    if (1) {
+    ESP_LOGI(TAG, "Init. Handlers registered.");
 
-        // static httpd_handle_t server = NULL;
-
-        /* Register event handlers to stop the server when Wi-Fi is disconnected,
-         * and re-start it upon connection.
-         */
-        ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &connect_handler, &http_server));
-        ESP_ERROR_CHECK(
-            esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, &http_server));
-
-        /* Start the server for the first time */
-        http_server = start_webserver();
-
-        return ESP_OK;
-    } else {
-        ESP_LOGW(TAG, "WI-FI disconnected");
-        return ESP_FAIL;
-    }
+    return ESP_OK;
 }
 
 static void HandleEvent(const serverEvent event) {
     switch (event) {
-    case START:
-        if (!httpConnected) {
-            httpConnected = true;
-            ESP_LOGI(TAG, "Server START");
-            if (wifi_sta_init() != ESP_OK) {
-                ESP_LOGE(TAG, "WIFI start ERROR");
-                vTaskDelay(pdMS_TO_TICKS(500)); //Delay to avoid multiple interrupt TODO: fixed it in GPIO component
-                stop_webserver(http_server);
-                wifi_sta_stop();
-                httpConnected = false;
-            } else {
-                if (http_server_start() != ESP_OK) {
-                    ESP_LOGE(TAG, "HTTP serv start ERROR");
-                    vTaskDelay(pdMS_TO_TICKS(500)); //Delay to avoid multiple interrupt TODO: fixed it in GPIO component
-                    httpConnected = false;
-                }
-            }
-        }
-        break;
-
-    case STOP:
-        if (httpConnected) {
-            ESP_LOGI(TAG, "Stoping server...");
-            if (stop_webserver(http_server) && wifi_sta_stop() != ESP_OK) { 
-                ESP_LOGE(TAG, "Error during stoping");
-            } else {
-                httpConnected = false;
-            }
-        }
-        break;
-
-    case CONN_LOST:
-        if (xTimerStart(stopServer, 0) != pdPASS) {
-            ESP_LOGE(TAG, "ERROR during starting timer");
+    case RECONNECT:
+        if (!httpServerState) {
+            httpServerState = true;
+            ESP_LOGI(TAG, "Opening a server");
+            wifi_reconnect();
         }
         break;
     }
@@ -629,9 +585,10 @@ static void HandleEvent(const serverEvent event) {
 
 void ServerTask(void* pvParameters) {
     (void)pvParameters;
+    wifi_sta_init();
+    http_server_start();
 
     qServer = xQueueCreate(eventQueueLen, sizeof(serverEvent));
-    stopServer = xTimerCreate("stop server tmr", pdMS_TO_TICKS(6000), pdFALSE, 0, stopServer_callback);
 
     while (1) {
         serverEvent event;
