@@ -4,7 +4,7 @@
 #include "freertos/task.h"
 #include "freertos/timers.h"
 
-// #include "soilHumidity.h"
+#include "servo.h"
 #include "GPIO.h"
 #include "airSensor.h"
 #include "httpServer.h"
@@ -44,11 +44,13 @@ static void LightCheck(uint8_t currentHour) {
         if (isLightON) {
             if (currentHour >= offHour || currentHour < onHour) {
                 lightingTurnOFF();
+                suspendRotation();
                 isLightON = false;
             }
         } else {
             if (currentHour >= onHour && currentHour < offHour) {
                 lightingTurnON();
+                resumeRotation();
                 isLightON = true;
             }
         }
@@ -57,11 +59,13 @@ static void LightCheck(uint8_t currentHour) {
         if (isLightON) {
             if (currentHour >= offHour && currentHour < onHour) {
                 lightingTurnOFF();
+                suspendRotation();
                 isLightON = false;
             }
         } else {
             if (currentHour >= onHour || currentHour < offHour) {
                 lightingTurnON();
+                resumeRotation();
                 isLightON = true;
             }
         }

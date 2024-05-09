@@ -10,6 +10,8 @@
 #define LIGHTING2 GPIO_NUM_33
 #define LIGHTING3 GPIO_NUM_25
 #define LIGHTING4 GPIO_NUM_26
+#define LIGHTING_PINS_GROUP ((LIGHTING1) | (LIGHTING2) | (LIGHTING3) | (LIGHTING4))
+
 #define FAN1 GPIO_NUM_14
 #define BUTTON1 GPIO_NUM_23
 
@@ -25,20 +27,27 @@ static void IRAM_ATTR gpio_isr_handler(void* arg) {
     }
 }
 
-void EnableButton() {
-    gpio_intr_enable(BUTTON1);
-}
+void EnableButton() { gpio_intr_enable(BUTTON1); }
 
 void lightingInit() {
 
-    gpio_reset_pin(LIGHTING1);
-    gpio_reset_pin(LIGHTING2);
-    gpio_reset_pin(LIGHTING3);
-    gpio_reset_pin(LIGHTING4);
-    gpio_set_direction(LIGHTING1, GPIO_MODE_OUTPUT);
-    gpio_set_direction(LIGHTING2, GPIO_MODE_OUTPUT);
-    gpio_set_direction(LIGHTING3, GPIO_MODE_OUTPUT);
-    gpio_set_direction(LIGHTING4, GPIO_MODE_OUTPUT);
+    // zero-initialize the config structure.
+    gpio_config_t light_io_conf = {};
+    light_io_conf.intr_type = GPIO_INTR_DISABLE;      // disable interrupt
+    light_io_conf.mode = GPIO_MODE_OUTPUT;            // set as output mode
+    light_io_conf.pin_bit_mask = LIGHTING_PINS_GROUP; // bit mask of the pins that you want to set
+    light_io_conf.pull_down_en = 0;                   // disable pull-down mode
+    light_io_conf.pull_up_en = 0;                     // disable pull-up mode
+    gpio_config(&light_io_conf);                      // configure GPIO with the given settings
+
+    // gpio_reset_pin(LIGHTING1);
+    // gpio_reset_pin(LIGHTING2);
+    // gpio_reset_pin(LIGHTING3);
+    // gpio_reset_pin(LIGHTING4);
+    // gpio_set_direction(LIGHTING1, GPIO_MODE_OUTPUT);
+    // gpio_set_direction(LIGHTING2, GPIO_MODE_OUTPUT);
+    // gpio_set_direction(LIGHTING3, GPIO_MODE_OUTPUT);
+    // gpio_set_direction(LIGHTING4, GPIO_MODE_OUTPUT);
     // LighingState = gpio_get_level(LIGHTING1);
 
     // BUTTON FOR WIFI
@@ -46,10 +55,8 @@ void lightingInit() {
     gpio_set_intr_type(BUTTON1, GPIO_INTR_POSEDGE);
     gpio_set_direction(BUTTON1, GPIO_MODE_INPUT);
     gpio_set_pull_mode(BUTTON1, GPIO_PULLUP_ONLY);
-    // install gpio isr service
-    gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
-    // hook isr handler for specific gpio pin
-    gpio_isr_handler_add(BUTTON1, gpio_isr_handler, (void*)BUTTON1);
+    gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);                 // install gpio isr service
+    gpio_isr_handler_add(BUTTON1, gpio_isr_handler, (void*)BUTTON1); // hook isr handler for specific gpio pin
 }
 
 void lightingTurnON() {

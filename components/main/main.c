@@ -11,7 +11,7 @@
 #include "i2cdev.h"
 
 #include "tController.h"
-// #include "tExecutor.h"
+#include "servo.h"
 #include "settings.h"
 #include "httpServer.h"
 
@@ -37,13 +37,12 @@ void app_main(void) {
 
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
-    // Initialize I2C for bme280 and ds3231
-    ESP_ERROR_CHECK(i2cdev_init());
+    ESP_ERROR_CHECK(i2cdev_init());     // Initialize I2C for bme280 and ds3231
 
     initializeSettings();
 
     xTaskCreate(ControllerTask, "Plant control", STACK_SIZE * 2, NULL, LOW_PRIORITY, NULL);
     xTaskCreate(ServerTask, "Server Task", STACK_SIZE * 5, NULL, LOW_PRIORITY, NULL);
     xTaskCreate(SettingsTask, "Settings Task", STACK_SIZE * 3, NULL, HIGH_PRIORITY, NULL);
-    // xTaskCreate(ExecutorTask, "Executor Task", STACK_SIZE, NULL, HIGH_PRIORITY, NULL);
+    xTaskCreate(ServoTask, "Servo Task", STACK_SIZE, NULL, LOW_PRIORITY, NULL);
 }
