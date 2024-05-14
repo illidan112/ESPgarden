@@ -4,7 +4,6 @@
 #include "freertos/task.h"
 #include "freertos/timers.h"
 
-#include "servo.h"
 #include "GPIO.h"
 #include "airSensor.h"
 #include "httpServer.h"
@@ -81,13 +80,13 @@ static void BoxFanCheck(uint8_t currentTemp) {
 
     if (currentTemp >= maxT) {
         if (!isFanON) {
-            fanTurnON();
+            fanTurnON(outFan);
             ESP_LOGI(TAG, "Temp higher than %d", maxT);
             isFanON = true;
         }
     } else {
         if (isFanON) {
-            fanTurnOFF();
+            fanTurnOFF(outFan);
             isFanON = false;
         }
     }

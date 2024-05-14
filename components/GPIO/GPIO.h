@@ -8,10 +8,16 @@ void lightingTurnON();
 
 void lightingTurnOFF();
 
-void fanTurnON();
+void fanTurnON(fangpio_t fan);
 
-void fanTurnOFF();
+void fanTurnOFF(fangpio_t fan);
 
 void EnableButton();
+
+typedef enum {
+    outFan = 14,
+    movingFan = 15, // надо поменять
+    inFan,
+} fangpio_t;
 
 #endif

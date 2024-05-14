@@ -92,12 +92,12 @@ void fanInit() {
     // gpio_set_direction(LAMP_VENT, GPIO_MODE_OUTPUT);
 }
 
-void fanTurnON() {
-    gpio_set_level(FAN1, 1);
-    ESP_LOGI(TAG, "Fan ON");
+void fanTurnON(fangpio_t fan) {
+    gpio_set_level(fan, 1);
+    ESP_LOGI(TAG, "Fan ON", (uint8_t)fan);
 }
 
-void fanTurnOFF() {
-    gpio_set_level(FAN1, 0);
-    ESP_LOGI(TAG, "Fan OFF");
+void fanTurnOFF(fangpio_t fan) {
+    gpio_set_level(fan, 0);
+    ESP_LOGI(TAG, "Fan OFF", (uint8_t)fan);
 }
