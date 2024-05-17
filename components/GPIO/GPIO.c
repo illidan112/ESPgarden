@@ -3,6 +3,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "httpServer.h"
+#include "GPIO.h"
 
 #define ESP_INTR_FLAG_DEFAULT 0
 
@@ -94,10 +95,10 @@ void fanInit() {
 
 void fanTurnON(fangpio_t fan) {
     gpio_set_level(fan, 1);
-    ESP_LOGI(TAG, "Fan ON", (uint8_t)fan);
+    ESP_LOGI(TAG, "Fan ON: %d", (uint8_t)fan);
 }
 
 void fanTurnOFF(fangpio_t fan) {
     gpio_set_level(fan, 0);
-    ESP_LOGI(TAG, "Fan OFF", (uint8_t)fan);
+    ESP_LOGI(TAG, "Fan OFF: %d", (uint8_t)fan);
 }

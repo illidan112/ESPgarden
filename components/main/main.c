@@ -44,5 +44,5 @@ void app_main(void) {
     xTaskCreate(ControllerTask, "Plant control", STACK_SIZE * 2, NULL, LOW_PRIORITY, NULL);
     xTaskCreate(ServerTask, "Server Task", STACK_SIZE * 5, NULL, LOW_PRIORITY, NULL);
     xTaskCreate(SettingsTask, "Settings Task", STACK_SIZE * 3, NULL, HIGH_PRIORITY, NULL);
-    xTaskCreate(ServoTask, "Servo Task", STACK_SIZE, NULL, LOW_PRIORITY, NULL);
+    xTaskCreate(ServoTask, "Servo Task", STACK_SIZE * 5, NULL, LOW_PRIORITY, NULL);
 }

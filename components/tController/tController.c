@@ -5,6 +5,7 @@
 #include "freertos/timers.h"
 
 #include "GPIO.h"
+#include "movingFan.h"
 #include "airSensor.h"
 #include "httpServer.h"
 #include "realtime.h"
@@ -43,13 +44,13 @@ static void LightCheck(uint8_t currentHour) {
         if (isLightON) {
             if (currentHour >= offHour || currentHour < onHour) {
                 lightingTurnOFF();
-                suspendRotation();
+                setMovingFanPeriod(30,3);
                 isLightON = false;
             }
         } else {
             if (currentHour >= onHour && currentHour < offHour) {
                 lightingTurnON();
-                resumeRotation();
+                setMovingFanPeriod(30,25);
                 isLightON = true;
             }
         }
@@ -58,13 +59,13 @@ static void LightCheck(uint8_t currentHour) {
         if (isLightON) {
             if (currentHour >= offHour && currentHour < onHour) {
                 lightingTurnOFF();
-                suspendRotation();
+                setMovingFanPeriod(30,3);
                 isLightON = false;
             }
         } else {
             if (currentHour >= onHour || currentHour < offHour) {
                 lightingTurnON();
-                resumeRotation();
+                setMovingFanPeriod(30,25);
                 isLightON = true;
             }
         }
