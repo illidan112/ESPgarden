@@ -1,0 +1,21 @@
+menu "App GPIO features"
+
+config APP_ENABLE_LIGHTING
+	bool "Enable lighting control"
+	default y
+	help
+	  When disabled, lighting functions are compiled as no-ops.
+
+config APP_ENABLE_FAN
+	bool "Enable fan control"
+	default y
+	help
+	  When disabled, fan functions are compiled as no-ops.
+
+config APP_ENABLE_WIFI_BUTTON
+	bool "Enable Wi-Fi button"
+	default y
+	help
+	  When disabled, the Wi-Fi button ISR is not installed.
+
+endmenu

@@ -12,6 +12,7 @@
 #include "settings.h"
 #include "tController.h"
 #include "wifi.h"
+#include "sdkconfig.h"
 
 #define WI_FI_RECCONECT_MS 10000
 
@@ -32,6 +33,7 @@ void scanTmrCallback() {
 }
 
 static void LightCheck(uint8_t currentHour) {
+#if CONFIG_APP_ENABLE_LIGHTING
     static bool isLightON = false;
     uint8_t onHour = 0;
     uint8_t offHour = 0;
@@ -66,9 +68,13 @@ static void LightCheck(uint8_t currentHour) {
             }
         }
     }
+#else
+    (void)currentHour;
+#endif
 }
 
 static void BoxFanCheck(uint8_t currentTemp) {
+#if CONFIG_APP_ENABLE_FAN
     static bool isFanON = false;
     uint8_t maxT = 0;
     uint8_t minT = 0;
@@ -87,6 +93,9 @@ static void BoxFanCheck(uint8_t currentTemp) {
             isFanON = false;
         }
     }
+#else
+    (void)currentTemp;
+#endif
 }
 
 static void HandleEvent(const controllerEvent event) {
@@ -115,8 +124,12 @@ void ControllerTask(void* pvParameters) {
 
     ESP_ERROR_CHECK(airSensorInit());
     ESP_ERROR_CHECK(timeInit());
+#if CONFIG_APP_ENABLE_LIGHTING
     lightingInit();
+#endif
+#if CONFIG_APP_ENABLE_FAN
     fanInit();
+#endif
 
     scan_timer = xTimerCreate("Scan Measures Tmr", pdMS_TO_TICKS(5000), pdTRUE, 0, scanTmrCallback);
     xTimerStart(scan_timer, 0);
