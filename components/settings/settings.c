@@ -67,6 +67,14 @@ static esp_err_t getAllSettgs() {
             ESP_LOGE(TAG, "NVS ERROR.");
         }
 
+        // LIGHT ENABLE FLAG (optional, default to 1)
+        uint8_t enabled = 1;
+        err = nvs_get_u8(my_handle, "lightingEnabled", &enabled);
+        if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) {
+            ESP_LOGE(TAG, "NVS ERROR.");
+        }
+        settings.lightingEnabled = enabled;
+
         nvs_close(my_handle); // Closing NVS
 
     } else {
@@ -86,10 +94,11 @@ void initializeSettings() {
         settings.lightTime.turnOffMinute = 0;
         settings.airTemp.MaxTemp = 25;
         settings.airTemp.MinTemp = 18;
+        settings.lightingEnabled = 1; // default enabled
     } else {
         ESP_LOGW(TAG, "Got settings from NVS");
-        ESP_LOGI(TAG, "turnOnHour:%d, turnOffHour:%d, MaxTemp:%d", settings.lightTime.turnOnHour,
-                 settings.lightTime.turnOffHour, settings.airTemp.MaxTemp);
+        ESP_LOGI(TAG, "turnOnHour:%d, turnOffHour:%d, MaxTemp:%d, lighting:%d", settings.lightTime.turnOnHour,
+                 settings.lightTime.turnOffHour, settings.airTemp.MaxTemp, settings.lightingEnabled);
     }
 
     lightTimeMutex = xSemaphoreCreateMutex();
@@ -177,6 +186,11 @@ static void storeAllSettgs() {
             ESP_LOGE(TAG, "NVS write MaxTemp ERROR.");
         }
 
+        // LIGHT ENABLE FLAG
+        if (nvs_set_u8(my_handle, "lightingEnabled", settings.lightingEnabled) != ESP_OK) {
+            ESP_LOGE(TAG, "NVS write lightingEnabled ERROR.");
+        }
+
         // Commit written value.
         // After setting any values, nvs_commit() must be called to ensure changes are written
         // to flash storage. Implementations may write to storage at other times,
@@ -231,6 +245,13 @@ int extractValue(char* data, char* tag) {
     return value;
 }
 
+// Lighting enable flag accessors
+void setLightingEnabled(uint8_t enabled) {
+    settings.lightingEnabled = enabled ? 1 : 0;
+}
+
+uint8_t getLightingEnabled() { return settings.lightingEnabled; }
+
 static void HandleEvent(const settEvent event) {
     char response[RESPONSE_BUF_SIZE];
     strcpy(response, globalBuf);
@@ -249,6 +270,14 @@ static void HandleEvent(const settEvent event) {
         if (bufLight >= 0) {
             updateTurnONTime(bufLight);
             ESP_LOGI(TAG, "lightON updated");
+        }
+
+        // lightingEnabled checkbox: present -> 1, absent -> 0
+        char* enabledTag = strstr(response, "lightingEnabled=");
+        if (enabledTag != NULL) {
+            setLightingEnabled(1);
+        } else {
+            setLightingEnabled(0);
         }
 
         storeAllSettgs();

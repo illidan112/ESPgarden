@@ -36,6 +36,15 @@ static void LightCheck(uint8_t currentHour) {
     uint8_t onHour = 0;
     uint8_t offHour = 0;
 
+    if (!getLightingEnabled()) {
+        // Ensure hardware is OFF when disabled
+        if (isLightON) {
+            lightingTurnOFF();
+            isLightON = false;
+        }
+        return;
+    }
+
     getLightTime(&onHour, &offHour);
 
     // Logic to determine whether to turn the light on or off

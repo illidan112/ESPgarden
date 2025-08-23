@@ -29,6 +29,7 @@ typedef struct {
 typedef struct {
     LightTime lightTime;
     AirTemp airTemp;
+    uint8_t lightingEnabled; // 0 - disabled, 1 - enabled
 
 } SettingsData;
 
@@ -85,5 +86,9 @@ void getAirTemp(uint8_t* maxTemp, uint8_t* minTemp);
  * @param turnOffHour Pointer to store the hour to turn the light off.
  */
 void getLightTime(uint8_t* turnOnHour, uint8_t* turnOffHour);
+
+// Lighting enable flag accessors
+void setLightingEnabled(uint8_t enabled);
+uint8_t getLightingEnabled();
 
 #endif
