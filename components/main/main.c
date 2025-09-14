@@ -10,10 +10,11 @@
 // #include <sys/time.h>
 #include "i2cdev.h"
 
-#include "tController.h"
-// #include "tExecutor.h"
+#include "governor.h"
 #include "settings.h"
-#include "httpServer.h"
+#include "event_bus.h"
+#include "http_server.h"
+#include "http_bridge.h"
 
 #define STACK_SIZE 1024
 #define HIGH_PRIORITY 2
@@ -37,13 +38,14 @@ void app_main(void) {
 
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
+    ESP_ERROR_CHECK(app_events_init());
+    ESP_ERROR_CHECK(http_bridge_init()); 
     // Initialize I2C for bme280 and ds3231
     ESP_ERROR_CHECK(i2cdev_init());
 
     initializeSettings();
 
-    xTaskCreate(ControllerTask, "Plant control", STACK_SIZE * 2, NULL, LOW_PRIORITY, NULL);
+    xTaskCreate(GovernorTask, "Plant control", STACK_SIZE * 2, NULL, LOW_PRIORITY, NULL);
     xTaskCreate(ServerTask, "Server Task", STACK_SIZE * 5, NULL, LOW_PRIORITY, NULL);
     xTaskCreate(SettingsTask, "Settings Task", STACK_SIZE * 3, NULL, HIGH_PRIORITY, NULL);
-    // xTaskCreate(ExecutorTask, "Executor Task", STACK_SIZE, NULL, HIGH_PRIORITY, NULL);
 }

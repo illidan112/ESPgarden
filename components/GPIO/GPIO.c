@@ -2,7 +2,7 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
-#include "httpServer.h"
+#include "event_bus.h"
 
 #define ESP_INTR_FLAG_DEFAULT 0
 
@@ -19,8 +19,11 @@ const static char* TAG = "GPIO";
 static void IRAM_ATTR gpio_isr_handler(void* arg) {
     if (!gpio_get_level(BUTTON1)) {
         gpio_intr_disable(BUTTON1);
-        serverEvent event = RECONNECT;
-        SendServerEventISR(event);
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        app_events_post_from_isr(APP_EVENT_BTN_WIFI_RECONNECT, NULL, 0, &xHigherPriorityTaskWoken);
+        if (xHigherPriorityTaskWoken) {
+            portYIELD_FROM_ISR();
+        }
         gpio_intr_enable(BUTTON1);
     }
 }

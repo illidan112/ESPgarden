@@ -3,8 +3,7 @@
 */
 
 #include "wifi.h"
-#include "tController.h"
-#include "httpServer.h"
+#include "event_bus.h"
 
 #include "esp_event.h"
 #include "esp_log.h"
@@ -57,7 +56,7 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
             ESP_LOGW(TAG, "Failed to connect to SSID:%s, password:%s", ESP_WIFI_SSID, ESP_WIFI_PASS);
             s_retry_num = 0;
-            setWebServerState(false);
+            app_events_post(APP_EVENT_WIFI_DISCONNECTED, NULL, 0, 0);
         }
     } else if (event_base == IP_EVENT) {
         // printf("ID event: %d\n", (int)event_id);
@@ -67,6 +66,7 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
             ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
             s_retry_num = 0;
             xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+            app_events_post(APP_EVENT_WIFI_CONNECTED, NULL, 0, 0);
             ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", ESP_WIFI_SSID, ESP_WIFI_PASS);
             isConnected = true;
             break;
