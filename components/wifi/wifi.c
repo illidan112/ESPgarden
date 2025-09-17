@@ -18,15 +18,10 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-/*
-    Change the below entries to strings with
-    the config you want - ie #define  ESP_WIFI_SSID "mywifissid"
-*/
-// #define ESP_WIFI_SSID "TrueWIFI"
-// #define ESP_WIFI_PASS ""
-#define ESP_WIFI_SSID "iPhone (Ilya)"
-#define ESP_WIFI_PASS "Abobaaboba112"
-#define ESP_MAXIMUM_RETRY 5
+// Values come from sdkconfig (set via menuconfig)
+#define ESP_WIFI_SSID       CONFIG_ESP_WIFI_SSID
+#define ESP_WIFI_PASS       CONFIG_ESP_WIFI_PASS
+#define ESP_MAXIMUM_RETRY   CONFIG_ESP_MAXIMUM_RETRY
 
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;

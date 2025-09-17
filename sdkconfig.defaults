@@ -1,0 +1,4 @@
+# Wi-Fi defaults (can be overridden via menuconfig)
+CONFIG_ESP_WIFI_SSID="your-ssid"
+CONFIG_ESP_WIFI_PASS="your-password"
+CONFIG_ESP_MAXIMUM_RETRY=5

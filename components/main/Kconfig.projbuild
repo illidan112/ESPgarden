@@ -1,0 +1,21 @@
+menu "Wi-Fi configuration"
+
+    config ESP_WIFI_SSID
+        string "Wi-Fi SSID"
+        default "your-ssid"
+        help
+            SSID of the Wi-Fi network to connect to in station mode.
+    
+    config ESP_WIFI_PASS
+        string "Wi-Fi password"
+        default "your-password"
+        help
+            Password of the Wi-Fi network (WPA/WPA2/WPA3). Leave empty for open networks.
+    
+    config ESP_MAXIMUM_RETRY
+        int "Maximum Wi-Fi reconnect attempts"
+        range 0 100
+        default 5
+        help
+            Number of times to retry connecting to the AP before giving up.
+endmenu    
